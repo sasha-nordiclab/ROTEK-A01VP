@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# FreeCAD automatic and manual backup files
+*.FCBak
+*_backup_before_*.FCStd
+*.FCStd1
+*.FCStd2
+
+# Local analysis/cache data
+lancedb/
+__pycache__/
+
