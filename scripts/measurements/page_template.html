@@ -1,0 +1,380 @@
+<title>Rotek Pump Measurements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a drawing sheet. Title block on top, then one section per view: drawing, then its dimension rows. */
+:root {
+  --paper: #eef2f1;
+  --sheet: #fbfcfc;
+  --ink: #1d2a2f;
+  --ink-2: #4c5d63;
+  --line: #c9d3d3;
+  --dim: #0c6b86;
+  --dim-soft: #d7ebf1;
+  --ok: #2c7a4b;
+  --ok-soft: #dcefe3;
+  --warn: #a8670f;
+  --warn-soft: #f6e8cf;
+  --bad: #b83b25;
+  --bad-soft: #f6dcd5;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1517; --sheet: #161e21; --ink: #d9e4e6; --ink-2: #93a6ab; --line: #2c3a3e;
+    --dim: #56b9d6; --dim-soft: #183842; --ok: #5cc184; --ok-soft: #173326; --warn: #e0a13f;
+    --warn-soft: #3a2d14; --bad: #f07a62; --bad-soft: #3d1f19; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1517; --sheet: #161e21; --ink: #d9e4e6; --ink-2: #93a6ab; --line: #2c3a3e;
+  --dim: #56b9d6; --dim-soft: #183842; --ok: #5cc184; --ok-soft: #173326; --warn: #e0a13f;
+  --warn-soft: #3a2d14; --bad: #f07a62; --bad-soft: #3d1f19; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.5 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 64px; display: grid; gap: 20px; }
+h1, h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: .01em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.02; }
+h2 { font-size: 26px; line-height: 1.1; }
+p { margin: 0; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* title block */
+.title { background: var(--sheet); border: 1.5px solid var(--ink); display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+.title > div { padding: 14px 16px; min-width: 0; }
+.title .name { border-right: 1.5px solid var(--ink); display: grid; gap: 6px; align-content: start; }
+.eyebrow { font: 600 11px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+.fields div { padding: 6px 10px; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; }
+.fields div:nth-child(4n+1) { border-left: 0; }
+.fields b { display: block; font: 600 10px/1.2 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.fields span { font: 500 14px/1.35 var(--font-mono); overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .title { grid-template-columns: 1fr; }
+  .title .name { border-right: 0; border-bottom: 1.5px solid var(--ink); }
+  .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fields div:nth-child(4n+1) { border-left: 1px solid var(--line); }
+  .fields div:nth-child(2n+1) { border-left: 0; }
+}
+
+/* rules + summary */
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.rule { background: var(--sheet); border: 1px solid var(--line); padding: 12px 14px; display: grid; gap: 4px; }
+.rule h3 { margin: 0; font: 600 13px/1.2 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+.rule p { font-size: 14px; color: var(--ink); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); padding-block: 10px; border-bottom: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 16px; font: 500 13px/1.3 var(--font-mono); }
+.stats b { font-weight: 600; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.filters button { font: 500 13px/1 var(--font-body); padding: 7px 11px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); cursor: pointer; border-radius: 3px; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+.filters button:focus-visible, .row input:focus-visible { outline: 2px solid var(--dim); outline-offset: 1px; }
+.notice { font-size: 14px; padding: 10px 14px; border: 1px solid var(--warn); background: var(--warn-soft); color: var(--ink); }
+
+/* view sections */
+.view { background: var(--sheet); border: 1px solid var(--line); display: grid; }
+.view header { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+.view header .letter { font: 700 34px/0.9 var(--font-display); color: var(--dim); }
+.view header p { color: var(--ink-2); font-size: 14px; flex: 1 1 260px; min-width: 0; }
+.scroll { overflow-x: auto; border-bottom: 1px solid var(--line); }
+.dwg { display: block; width: 100%; min-width: 620px; height: auto; max-height: 78vh; background: var(--sheet); }
+.dwg .e { fill: none; stroke: var(--ink); stroke-width: 1.05px; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.dwg .e.smooth { stroke: var(--ink-2); stroke-width: .7px; }
+.dwg .gl { stroke: var(--ink-2); stroke-width: 1.3px; vector-effect: non-scaling-stroke; }
+.dwg .gh { stroke: var(--ink-2); stroke-width: .6px; vector-effect: non-scaling-stroke; }
+.dwg .gt { fill: var(--ink-2); font: 600 2.2px var(--font-mono); letter-spacing: .25px; text-anchor: end; }
+.dwg .dl, .dwg .ld { stroke: var(--dim); stroke-width: .9px; vector-effect: non-scaling-stroke; }
+.dwg .xl { stroke: var(--dim); stroke-width: .6px; vector-effect: non-scaling-stroke; opacity: .75; }
+.dwg .ld { stroke-dasharray: 3 2; }
+.dwg .ah, .dwg .dot { fill: var(--dim); }
+.dwg .tag { cursor: pointer; }
+.dwg .tag circle { fill: var(--sheet); stroke: var(--dim); stroke-width: 1.1px; vector-effect: non-scaling-stroke; }
+.dwg .tag.depth circle { stroke-dasharray: 2.5 1.6; }
+.dwg .tag text { fill: var(--dim); font: 600 1.55px var(--font-mono); text-anchor: middle; dominant-baseline: central; }
+.dwg .tag.st-ok circle { fill: var(--ok-soft); stroke: var(--ok); } .dwg .tag.st-ok text { fill: var(--ok); }
+.dwg .tag.st-warn circle { fill: var(--warn-soft); stroke: var(--warn); } .dwg .tag.st-warn text { fill: var(--warn); }
+.dwg .tag.st-bad circle { fill: var(--bad-soft); stroke: var(--bad); } .dwg .tag.st-bad text { fill: var(--bad); }
+.dwg .tag.hl circle { stroke-width: 2.6px; }
+.dwg .tag:focus-visible { outline: none; } .dwg .tag:focus-visible circle { stroke-width: 2.6px; }
+
+/* rows */
+.rows { display: grid; }
+.rowhead, .row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 84px 84px 132px 92px; gap: 0 12px; align-items: center; padding: 8px 16px; }
+.rowhead { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+.row { border-bottom: 1px solid var(--line); scroll-margin-top: 96px; }
+.row:last-child { border-bottom: 0; }
+.row.hl { background: var(--dim-soft); }
+.row[hidden] { display: none !important; }
+.id { font: 600 15px/1 var(--font-mono); color: var(--dim); display: flex; align-items: center; gap: 4px; }
+.prio { font: 600 9.5px/1 var(--font-mono); padding: 2px 4px; border: 1px solid currentColor; border-radius: 2px; }
+.prio.a { color: var(--ink); } .prio.b { color: var(--ink-2); opacity: .8; }
+.what { min-width: 0; display: grid; gap: 2px; }
+.what .label { font-weight: 500; }
+.what .how { font-size: 13px; color: var(--ink-2); }
+.what .src { font: 400 12px/1.35 var(--font-mono); color: var(--ink-2); }
+.what .src .chk { color: var(--warn); font-weight: 600; }
+.num { font: 500 14px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.num small { display: none; }
+.num.muted { color: var(--ink-2); }
+.entry { display: grid; gap: 4px; }
+.entry input { width: 100%; font: 500 15px/1.2 var(--font-mono); padding: 7px 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 3px; text-align: right; }
+.entry input.note { font: 400 12px/1.2 var(--font-body); text-align: left; padding: 5px 8px; }
+.entry input:disabled { opacity: .55; }
+.delta { font: 600 13px/1 var(--font-mono); text-align: center; padding: 6px 4px; border-radius: 3px; border: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; }
+.delta.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.delta.warn { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.delta.bad { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.saved { font: 400 11px/1 var(--font-mono); color: var(--ink-2); min-height: 11px; text-align: right; }
+@media (max-width: 760px) {
+  .rowhead { display: none; }
+  .row { grid-template-columns: 48px minmax(0, 1fr) 96px; grid-template-areas: "id what what" "id model drawing" "id entry delta"; gap: 6px 10px; padding: 12px 14px; }
+  .row .id { grid-area: id; align-self: start; flex-direction: column; align-items: flex-start; }
+  .row .what { grid-area: what; }
+  .row .model { grid-area: model; text-align: left; } .row .drawing { grid-area: drawing; text-align: left; }
+  .num small { display: inline; font: 600 10px/1 var(--font-mono); letter-spacing: .08em; color: var(--ink-2); margin-right: 4px; }
+  .row .entry { grid-area: entry; } .row .delta { grid-area: delta; align-self: start; }
+}
+@media (prefers-reduced-motion: no-preference) { .row { transition: background-color .25s; } }
+footer { color: var(--ink-2); font-size: 13px; }
+</style>
+
+<div class="wrap">
+  <section class="title" aria-label="Title block">
+    <div class="name">
+      <span class="eyebrow">Measurement sheet</span>
+      <h1>Rotek WPDC-06.7L pump</h1>
+      <p>Measure each numbered dimension on the real pump and type it in. Values save as you type. Claude reads them and corrects the model.</p>
+    </div>
+    <div class="fields">
+      <div><b>Part</b><span>Pump (reference)</span></div>
+      <div><b>Model</b><span>TPU_Pump_Holder.FCStd</span></div>
+      <div><b>Units</b><span>mm</span></div>
+      <div><b>Rows</b><span id="f-rows">—</span></div>
+      <div><b>Tolerance A</b><span>±0.10</span></div>
+      <div><b>Tolerance B</b><span>±0.20</span></div>
+      <div><b>Tool</b><span>Caliper ±0.05</span></div>
+      <div><b>Revision</b><span>1</span></div>
+    </div>
+  </section>
+
+  <section class="rules" aria-label="How to measure">
+    <div class="rule"><h3>Heights</h3><p>Stand the pump on a flat table with the mounting face down. Measure every height from the table with the depth rod. The ribs rest on the table, so the pockets don't matter.</p></div>
+    <div class="rule"><h3>Lengths</h3><p>Lengths along the pump run from the tip of the inlet barb, the part straight on the axis.</p></div>
+    <div class="rule"><h3>Priority</h3><p><b>A</b> rows shape the holder: mounting plate, slots, outer size, outlet and cable. Do them first. <b>B</b> rows refine the shape.</p></div>
+    <div class="rule"><h3>Δ colours</h3><p>Δ is your value minus the model. Green is within tolerance, amber is up to 3× tolerance, red is more. Rows marked <span class="mono" style="color:var(--warn);font-weight:600">check</span> disagree with the drawing or with an earlier reading.</p></div>
+  </section>
+
+  <div class="bar">
+    <div class="stats" id="stats" aria-live="polite"><span>Loading saved values…</span></div>
+    <div class="filters" role="group" aria-label="Show rows">
+      <button type="button" data-f="all" aria-pressed="true">All</button>
+      <button type="button" data-f="a" aria-pressed="false">Priority A</button>
+      <button type="button" data-f="todo" aria-pressed="false">Not measured</button>
+      <button type="button" data-f="check" aria-pressed="false">Check first</button>
+    </div>
+  </div>
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="view" id="view-A">
+    <header><span class="letter">A</span><h2>Mounting face</h2><p>Seen from the wall side, inlet to the left. Slots, plate edges and the pocket grid. Dashed circles are depths.</p></header>
+    <div class="scroll"><!--SVG_A--></div>
+    <div class="rows" data-view="A"></div>
+  </section>
+  <section class="view" id="view-B">
+    <header><span class="letter">B</span><h2>Side</h2><p>Mounting face on the table, outlet up, inlet to the left. Lengths along the pump and heights from the table.</p></header>
+    <div class="scroll"><!--SVG_B--></div>
+    <div class="rows" data-view="B"></div>
+  </section>
+  <section class="view" id="view-C">
+    <header><span class="letter">C</span><h2>Inlet end</h2><p>Looking at the inlet, mounting face on the table. Head, cover, ear lugs, partitions and the outlet offset.</p></header>
+    <div class="scroll"><!--SVG_C--></div>
+    <div class="rows" data-view="C"></div>
+  </section>
+  <section class="view" id="view-D">
+    <header><span class="letter">D</span><h2>Motor end</h2><p>Looking at the motor end, mounting face on the table. Motor, end step, grommet and the plate edge.</p></header>
+    <div class="scroll"><!--SVG_D--></div>
+    <div class="rows" data-view="D"></div>
+  </section>
+
+  <footer>Drawings are projections of the current FreeCAD model. Model values update when Claude revises the model; your entries stay.</footer>
+</div>
+
+<script>
+const ROWS = /*ROWS*/[];
+const TOL = { A: 0.10, B: 0.20 };
+const state = {};          // id -> {value, note, updated}
+const pending = {};        // id -> timer
+const chains = {};         // id -> promise (one write at a time per doc)
+let db = null, canWrite = true, filter = 'all';
+
+const $ = (s, el = document) => el.querySelector(s);
+const fmt = v => (v === null || v === undefined || v === '') ? '—' : Number(v).toFixed(2).replace(/\.?0+$/, m => m.startsWith('.') ? '' : m);
+const parseNum = s => { const t = String(s).trim().replace(',', '.'); if (t === '') return null; const n = Number(t); return Number.isFinite(n) ? n : NaN; };
+
+function status(r, v) {
+  if (v === null || v === undefined || Number.isNaN(v)) return null;
+  const d = v - r.model, t = TOL[r.prio], a = Math.abs(d);
+  return { d, cls: a <= t + 1e-9 ? 'ok' : a <= 3 * t + 1e-9 ? 'warn' : 'bad' };
+}
+
+function rowHTML(r) {
+  const chk = r.check ? ' · <span class="chk">check</span>' : '';
+  return `<div class="row" id="row-${r.id}" data-id="${r.id}">
+    <div class="id">${r.id}<span class="prio ${r.prio.toLowerCase()}">${r.prio}</span></div>
+    <div class="what"><span class="label"></span><span class="how"></span><span class="src"></span></div>
+    <div class="num model"><small>MODEL</small>${fmt(r.model)}</div>
+    <div class="num drawing muted"><small>DRAWING</small>${r.drawing == null ? '—' : fmt(r.drawing)}</div>
+    <div class="entry">
+      <input id="v-${r.id}" inputmode="decimal" autocomplete="off" placeholder="your value" aria-label="${r.id} measured value">
+      <input id="n-${r.id}" class="note" autocomplete="off" placeholder="note" aria-label="${r.id} note">
+      <span class="saved" id="s-${r.id}"></span>
+    </div>
+    <div class="delta" id="d-${r.id}">—</div>
+  </div>`;
+}
+
+function renderRows() {
+  for (const v of 'ABCD') {
+    const box = $(`.rows[data-view="${v}"]`);
+    const head = `<div class="rowhead"><span>ID</span><span>Dimension · how · earlier source</span><span style="text-align:right">Model</span><span style="text-align:right">Drawing</span><span>Your value</span><span style="text-align:center">Δ</span></div>`;
+    box.innerHTML = head + ROWS.filter(r => r.view === v).map(rowHTML).join('');
+  }
+  for (const r of ROWS) {
+    const el = $(`#row-${r.id}`);
+    $('.label', el).textContent = r.label;
+    $('.how', el).textContent = r.how;
+    $('.src', el).innerHTML = '';
+    $('.src', el).append(document.createTextNode('earlier: ' + r.source));
+    if (r.check) { const s = document.createElement('span'); s.className = 'chk'; s.textContent = ' · check'; $('.src', el).append(s); }
+  }
+  $('#f-rows').textContent = ROWS.length;
+}
+
+function paint(id) {
+  const r = ROWS.find(x => x.id === id); if (!r) return;
+  const s = state[id] || {};
+  const vIn = $(`#v-${id}`), nIn = $(`#n-${id}`);
+  if (document.activeElement !== vIn && !pending[id]) vIn.value = s.value == null ? '' : String(s.value);
+  if (document.activeElement !== nIn && !pending[id]) nIn.value = s.note || '';
+  const local = parseNum(vIn.value);
+  const st = status(r, local);
+  const d = $(`#d-${id}`);
+  d.className = 'delta' + (st ? ' ' + st.cls : '');
+  d.textContent = st ? (st.d >= 0 ? '+' : '−') + Math.abs(st.d).toFixed(2) : (Number.isNaN(local) ? 'not a number' : '—');
+  document.querySelectorAll(`.tag[data-id="${id}"]`).forEach(g => {
+    g.classList.remove('st-ok', 'st-warn', 'st-bad');
+    if (st) g.classList.add('st-' + st.cls);
+  });
+}
+
+function stats() {
+  const done = ROWS.filter(r => { const v = parseNum($(`#v-${r.id}`).value); return v !== null && !Number.isNaN(v); });
+  const a = ROWS.filter(r => r.prio === 'A'), aDone = done.filter(r => r.prio === 'A');
+  const off = done.filter(r => { const st = status(r, parseNum($(`#v-${r.id}`).value)); return st && st.cls !== 'ok'; });
+  $('#stats').innerHTML = `<span>Measured <b>${done.length}</b> / ${ROWS.length}</span><span>Priority A <b>${aDone.length}</b> / ${a.length}</span><span>Outside tolerance <b style="color:${off.length ? 'var(--bad)' : 'var(--ok)'}">${off.length}</b></span>`;
+  applyFilter();
+}
+
+function applyFilter() {
+  for (const r of ROWS) {
+    const v = parseNum($(`#v-${r.id}`).value);
+    const measured = v !== null && !Number.isNaN(v);
+    const show = filter === 'all' || (filter === 'a' && r.prio === 'A') || (filter === 'todo' && !measured) || (filter === 'check' && r.check);
+    $(`#row-${r.id}`).hidden = !show;
+  }
+}
+
+function queueSave(id) {
+  clearTimeout(pending[id]);
+  $(`#s-${id}`).textContent = 'typing…';
+  pending[id] = setTimeout(() => { pending[id] = null; save(id); }, 800);
+}
+
+function save(id) {
+  if (!db || !canWrite) { $(`#s-${id}`).textContent = 'not saved'; return; }
+  const value = parseNum($(`#v-${id}`).value);
+  if (Number.isNaN(value)) { $(`#s-${id}`).textContent = 'not saved: not a number'; return; }
+  const note = $(`#n-${id}`).value.trim().slice(0, 300);
+  const prev = state[id] || {};
+  if ((prev.value ?? null) === value && (prev.note || '') === note) { $(`#s-${id}`).textContent = 'saved'; return; }
+  const body = { value, note, updated: new Date().toISOString() };
+  chains[id] = (chains[id] || Promise.resolve()).then(() => db.collection('meas').doc(id).set(body))
+    .then(() => { $(`#s-${id}`).textContent = 'saved'; })
+    .catch(e => {
+      if (e && e.code === 'invalid_argument') { canWrite = false; lockInputs('You can view this sheet but not save values in it.'); }
+      $(`#s-${id}`).textContent = 'not saved';
+    });
+}
+
+function lockInputs(msg) {
+  document.querySelectorAll('.entry input').forEach(i => { i.disabled = true; });
+  const n = $('#notice'); n.textContent = msg; n.hidden = false;
+}
+
+function highlight(id, on) {
+  document.querySelectorAll(`.tag[data-id="${id}"]`).forEach(g => g.classList.toggle('hl', on));
+  const row = $(`#row-${id}`); if (row) row.classList.toggle('hl', on);
+}
+
+function wire() {
+  for (const r of ROWS) {
+    const vIn = $(`#v-${r.id}`), nIn = $(`#n-${r.id}`), row = $(`#row-${r.id}`);
+    vIn.addEventListener('input', () => { paint(r.id); stats(); queueSave(r.id); });
+    nIn.addEventListener('input', () => queueSave(r.id));
+    [vIn, nIn].forEach(i => i.addEventListener('blur', () => { if (pending[r.id]) { clearTimeout(pending[r.id]); pending[r.id] = null; save(r.id); } }));
+    row.addEventListener('mouseenter', () => highlight(r.id, true));
+    row.addEventListener('mouseleave', () => highlight(r.id, false));
+    vIn.addEventListener('focus', () => highlight(r.id, true));
+    vIn.addEventListener('blur', () => highlight(r.id, false));
+  }
+  document.querySelectorAll('.tag').forEach(g => {
+    const go = () => {
+      const id = g.dataset.id, row = $(`#row-${id}`);
+      if (row.hidden) { filter = 'all'; setFilterButtons(); applyFilter(); }
+      row.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+      $(`#v-${id}`).focus({ preventScroll: true });
+    };
+    g.addEventListener('click', go);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    g.addEventListener('mouseenter', () => highlight(g.dataset.id, true));
+    g.addEventListener('mouseleave', () => highlight(g.dataset.id, false));
+  });
+  document.querySelectorAll('.filters button').forEach(b => b.addEventListener('click', () => {
+    filter = b.dataset.f; setFilterButtons(); applyFilter();
+    try { localStorage.setItem('pump-filter', filter); } catch (e) {}
+  }));
+  try { const f = localStorage.getItem('pump-filter'); if (f) { filter = f; setFilterButtons(); } } catch (e) {}
+}
+
+function setFilterButtons() {
+  document.querySelectorAll('.filters button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === filter)));
+}
+
+async function connect() {
+  const c = window.claude;
+  db = c && c.use ? await c.use('db') : null;
+  if (!db) {
+    lockInputs('Saving is off in this view. Open the sheet on claude.ai while signed in to save measurements.');
+    stats(); return;
+  }
+  db.collection('meas').onSnapshot(snap => {
+    for (const doc of snap.docs) { const d = doc.data(); if (d) state[doc.id] = d; }
+    for (const ch of snap.docChanges()) if (ch.type === 'removed') delete state[ch.doc.id];
+    for (const r of ROWS) paint(r.id);
+    stats();
+  }, e => {
+    if (e && (e.code === 'revoked' || e.code === 'not_granted')) lockInputs('Saving stopped for this view. Reload the page to continue.');
+  });
+}
+
+renderRows();
+wire();
+for (const r of ROWS) paint(r.id);
+stats();
+connect();
+</script>
