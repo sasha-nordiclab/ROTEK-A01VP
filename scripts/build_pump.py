@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild the Pump reference body from scratch in the running FreeCAD.
+"""Rebuild the reference body of the Rotek WPDC-06.7L-10M-24-VP pump from scratch in the running FreeCAD.
 
 Every step is an fdmkit run() batch sent over XML-RPC; the run stops at the first ERR.
 Symmetry is native PartDesign: one slot corner + MultiTransform (two mirrors), the
@@ -23,27 +23,27 @@ DOC = 'TPU_Pump_Holder'
 # (name, value or formula, description); None as name starts a group header
 PARAMS = [
     (None, 'MOTOR AND HEAD', None),
-    ('p_len', 75, 'Inlet tip to the motor end face, grommet excluded (drawing)'),
+    ('ax_h', 21.28, 'Pump axis height above the mounting face (drawing ear geometry; not measured yet, row B10)'),
+    ('p_len', 74.5, 'Inlet tip to the motor end face, grommet excluded (caliper 74.5; drawing 75)'),
     ('p_d', 36.7, 'Motor diameter (caliper 36.72)'),
     ('head_d', 40.3, 'Pump head diameter (caliper 40.29)'),
-    ('head_x0', 16.5, 'Inlet tip to the ear-lug face of the head (drawing 22 - 5.5)'),
-    ('head_x1', 32, 'Inlet tip to the joint between head and motor (drawing 22 + 10)'),
-    ('cap_d', 33.6, 'Motor end face diameter inside the end step (photo)'),
-    ('cap_len', 2.4, 'Length of the step at the motor end (estimate)'),
+    ('head_x0', 15.0, 'Inlet tip to the ear-lug face of the head (caliper 15.0; photo IMG_7253 15.0)'),
+    ('head_len', 16.4, 'Head length, ear-lug face to the joint with the motor (photo IMG_7253 16.4; drawing 15.5; caliper 14.0 disagrees)'),
+    ('head_x1', 'head_x0 + head_len', 'Inlet tip to the joint between head and motor'),
+    ('cap_d', 33.2, 'Motor end face diameter inside the end step (caliper)'),
+    ('cap_len', 2.0, 'Length of the step at the motor end (caliper)'),
     (None, 'EARS', None),
     ('ear_lk', 42.4, 'Bolt circle of the four head screws (drawing)'),
-    ('ear_r', 3.35, 'Ear lug radius (drawing R3.35)'),
-    ('ear_a', 35, 'Ear angle from the vertical, deg (drawing)'),
-    ('ear_span', 42, 'Mounting face to the far edge of the farthest ear lug (drawing)'),
+    ('ear_r', 3.35, 'Ear lug radius (drawing R3.35; caliper 6.8 wide)'),
+    ('ear_span', 40.75, 'Mounting face to the far edge of the highest ear lug (caliper 40.75; drawing 42)'),
+    ('ear_a', 'acos((ear_span - ax_h - ear_r) / (ear_lk / 2)) / 1deg', 'Ear angle from the vertical, deg, from ear_span and ax_h (drawing says 35)'),
     ('scr_d', 5, 'Screw head diameter (photo estimate)'),
-    ('scr_h', 2.2, 'Screw head height above the ear lug (estimate)'),
+    ('scr_h', 2.2, 'Screw head height above the ear lug (estimate; caliper 2.0, within tolerance)'),
     (None, 'INLET', None),
     ('in_d', 14.4, 'Inlet barb diameter (drawing)'),
     ('in_len', 4, 'Inlet barb length (drawing)'),
     ('neck_d', 13.4, 'Inlet neck diameter (drawing)'),
-    ('neck_len', 7, 'Inlet neck length (drawing)'),
-    ('boss_d', 23, 'Boss around the inlet (drawing)'),
-    ('cone_len', 2.5, 'Cone from the neck to the boss (drawing estimate)'),
+    ('neck_len', 8.2, 'Inlet neck length (caliper 8.2; drawing 7)'),
     (None, 'INLET FACE', None),
     ('cov_d', 31.99, 'Raised cover on the inlet face (caliper)'),
     ('rib_t', 2.17, 'Partition width on the inlet face (caliper)'),
@@ -53,53 +53,55 @@ PARAMS = [
     ('out_d', 8, 'Outlet barb diameter (drawing)'),
     ('out_len', 5, 'Outlet barb length (drawing)'),
     ('out_d2', 7, 'Outlet tube diameter below the barb (drawing)'),
-    ('out_reach', 52, 'Mounting face to the outlet tip (drawing)'),
-    ('out_x', 16.5, 'Inlet tip to the outlet axis (drawing 22 - 5.5)'),
-    ('out_y', -8, 'Outlet axis offset from the pump axis along Y (drawing and photos)'),
+    ('out_reach', 51.4, 'Mounting face to the outlet tip (caliper 51.4; drawing 52)'),
+    ('out_x', 'in_len + neck_len + out_d2/2 + 0.01', 'Inlet tip to the outlet axis: tube tangent to the boss (mini flange), front flush with the boss face (+0.01 keeps the solid valid)'),
+    ('out_y', -7.35, 'Outlet axis offset from the pump axis along Y (caliper 31.0 across tube and head, minus head_d/2 and out_d2/2; drawing 8)'),
     (None, 'CABLE GROMMET', None),
     ('grm_y', -9.3, 'Wire hole offset from the pump axis along Y, at axis height (photo)'),
     ('grm_z', -3.8, 'Grommet centre below the wire hole (photo)'),
-    ('grm_w', 8.8, 'Grommet width (photo)'),
-    ('grm_l', 16.4, 'Grommet length, figure-8 of two discs (photo)'),
+    ('grm_w', 9.5, 'Grommet width (caliper)'),
+    ('grm_l', 15, 'Grommet length, figure-8 of two discs (caliper)'),
     ('grm_t', 1.5, 'Grommet height above the motor end face (estimate)'),
     (None, 'MOUNT PLATE', None),
     ('fl_w', 45, 'Plate width across the slotted edges (caliper 44.93)'),
     ('fl_len', 32, 'Plate length along the pump axis (caliper 32.03)'),
-    ('fl_t', 3.0, 'Plate thickness at the edge (caliper 2.98)'),
+    ('fl_t', 3.0, 'Plate thickness at the edge (caliper 2.98, 3.0)'),
+    ('fl_off', 1.0, 'Plate centre offset from the slot pattern towards the inlet (drawing 3.35 / 5.35; caliper 3.45 / 5.5)'),
     ('web_w', 13, 'Web between plate and motor (drawing estimate)'),
     ('web_h', 1.5, 'Web height above the plate back (estimate)'),
     (None, 'SLOTS', None),
     ('hole_x0', 39, 'Inlet tip to the inlet-side slot centre (drawing)'),
     ('hole_dx', 20, 'Slot pitch along the axis (drawing, caliper 23.36 - 3.24)'),
     ('hole_dy', 35, 'Slot pitch across the plate (drawing)'),
-    ('hole_d', 3.3, 'Slot width (drawing; caliper 3.24 to 3.39)'),
+    ('hole_d', 3.3, 'Slot width at the entry (drawing; caliper 3.37 to 3.40)'),
+    ('hook_w', 3.5, 'Slot width in the hook (caliper)'),
     ('hook_l', 5.46, 'Slot length along the axis, hook included (caliper)'),
     ('slot_ov', 2, 'Cutter overshoot past the plate edge (construction)'),
     (None, 'POCKETS', None),
     ('pk_d', 1.5, 'Depth of the side and outer pockets (caliper)'),
     ('pk_dc', 2.5, 'Depth of the centre pockets (caliper)'),
     ('rib', 1.8, 'Rib between pockets (photo)'),
-    ('frame', 1.4, 'Frame along the slotted edges (photo)'),
-    ('pk_fi', 1.2, 'Frame at the inlet end (photo)'),
-    ('pk_fm', 1.6, 'Frame at the motor end (photo)'),
+    ('frame', 1.4, 'Frame along the slotted edges (photo; caliper 1.5, within tolerance)'),
+    ('pk_fi', 1.5, 'Frame at the inlet end (caliper)'),
+    ('pk_fm', 1.6, 'Frame at the motor end (photo; caliper 1.5, within tolerance)'),
     ('pk_h', 6.3, 'Pocket length along the axis, three inlet-side rows (photo)'),
     ('pk_c3w', 10.2, 'Centre pocket width (photo)'),
-    ('pk_c2w', 4.0, 'Side pocket width (photo)'),
+    ('pk_c2w', 4.3, 'Side pocket width (caliper)'),
     ('pk_fr', 2.2, 'Radius of the outer pockets around the slot hooks (photo)'),
     ('pk_r', 0.8, 'Corner radius of the rectangular pockets (photo)'),
     (None, 'DERIVED', None),
-    ('ax_h', 'ear_span - ear_lk/2*cos(ear_a) - ear_r', 'Pump axis height above the mounting face'),
     ('x_tip', '-(hole_x0 + hole_dx/2)', 'X of the inlet tip; origin is the slot pattern centre'),
-    ('fl_x0', 'hole_x0 + hole_dx/2 - fl_len/2', 'Inlet tip to the plate (plate symmetric about the slots)'),
+    ('fl_x0', 'hole_x0 + hole_dx/2 - fl_len/2 - fl_off', 'Inlet tip to the inlet-end edge of the plate'),
     ('x_fs', 'x_tip + fl_x0', 'X of the inlet-end plate edge'),
     ('x_fe', 'x_tip + fl_x0 + fl_len', 'X of the motor-end plate edge'),
     ('cov_t', 'rib_h', 'Cover height above the recessed face = partition height'),
+    ('boss_d', 'out_d2 - 2*out_y', 'Boss (mini flange) around the inlet, tangent to the outlet tube (photo 22.3; drawing 23)'),
     ('pk_c2a', 'pk_c3w/2 + rib', 'Side pockets, inner Y'),
     ('pk_c2b', 'pk_c2a + pk_c2w', 'Side pockets, outer Y'),
     ('pk_c1a', 'pk_c2b + rib', 'Outer pockets, inner Y'),
     ('pk_c1b', 'fl_w/2 - frame', 'Outer pockets, outer Y'),
     ('pk_hx', 'hole_dx/2 + hole_d/2 - hook_l - rib', 'Outer pockets stop this far from X 0 beside the hooks'),
-    ('pk_hy', 'hole_dy/2 - hole_d/2 - rib', 'Outer pockets reach this Y beside the hooks'),
+    ('pk_hy', 'hole_dy/2 - hook_w/2 - rib', 'Outer pockets reach this Y beside the hooks'),
     ('pk_ra0', 'x_fs + pk_fi', 'Row A (inlet end) start X'),
     ('pk_ra1', 'pk_ra0 + pk_h', 'Row A end X'),
     ('pk_rb0', 'pk_ra1 + rib', 'Row B start X'),
@@ -124,7 +126,7 @@ def params_batch():
         lines.append(f'r = int(s.getCellFromAlias({name!r})[1:]); s.set(f"C{{r}}", {desc!r})')
     lines.append('s.setColumnWidth("A", 110); s.setColumnWidth("C", 520)')
     lines.append('App.ActiveDocument.recompute()')
-    lines.append("P('ax_h', 'x_fs', 'x_fe', 'pk_rd0', 'pk_hx', 'pk_hy')")
+    lines.append("P('ax_h', 'ear_a', 'head_x1', 'out_x', 'boss_d', 'x_fs', 'x_fe', 'pk_rd0', 'pk_hx', 'pk_hy')")
     return '\n'.join(lines)
 
 
@@ -212,13 +214,10 @@ pp.SuppressedIndices = [1]
 d.recompute()
 after = [has(ra + k * 90) for k in range(4)]
 f"{done(pp, [d.face_rib])} present at rib_a+k*90 before {before} after {after}"''',
-    # 8: inlet boss, cone (taper by expression), neck, barb
-    "plane('pl_boss','YZ','x_tip + in_len + neck_len + cone_len'); sk('s_boss','pl_boss'); circ('s_boss','boss_d',0,'ax_h'); pad('s_boss','head_x0 - cov_t - in_len - neck_len - cone_len','boss'); "
-    "plane('pl_cone','YZ','x_tip + in_len + neck_len'); sk('s_cone','pl_cone'); circ('s_cone','neck_d',0,'ax_h'); pad('s_cone','cone_len','cone'); "
-    "import FreeCAD; c = FreeCAD.ActiveDocument.getObject('cone'); c.setExpression('TaperAngle', 'atan((params.boss_d - params.neck_d) / 2 / params.cone_len)'); FreeCAD.ActiveDocument.recompute(); "
+    # 8: inlet boss (mini flange, straight step from the neck, no cone), neck, barb
+    "plane('pl_boss','YZ','x_tip + in_len + neck_len'); sk('s_boss','pl_boss'); circ('s_boss','boss_d',0,'ax_h'); pad('s_boss','head_x0 - cov_t - in_len - neck_len','boss'); "
     "plane('pl_neck','YZ','x_tip + in_len'); sk('s_neck','pl_neck'); circ('s_neck','neck_d',0,'ax_h'); pad('s_neck','neck_len','neck'); "
-    "plane('pl_inlet','YZ','x_tip'); sk('s_inlet','pl_inlet'); circ('s_inlet','in_d',0,'ax_h'); pad('s_inlet','in_len','inlet'); "
-    "(round(c.TaperAngle.Value, 2), c.Shape.isValid())",
+    "plane('pl_inlet','YZ','x_tip'); sk('s_inlet','pl_inlet'); circ('s_inlet','in_d',0,'ax_h'); pad('s_inlet','in_len','inlet')",
     # 9: outlet and grommet
     "plane('pl_axis','XY','ax_h'); sk('s_outlet_tube','pl_axis'); circ('s_outlet_tube','out_d2','x_tip + out_x','out_y'); pad('s_outlet_tube','out_reach - out_len - ax_h','outlet_tube'); "
     "plane('pl_barb','XY','out_reach - out_len'); sk('s_outlet_barb','pl_barb'); circ('s_outlet_barb','out_d','x_tip + out_x','out_y'); pad('s_outlet_barb','out_len','outlet_barb'); "
@@ -226,7 +225,7 @@ f"{done(pp, [d.face_rib])} present at rib_a+k*90 before {before} after {after}"'
     # 10: one slot corner (+X, +Y): entry open to the edge and hook towards the middle
     "plane('pl_plate_back','XY','fl_t'); "
     "sk('s_slot_entry','pl_plate_back'); slot('s_slot_entry','fl_w/2 + slot_ov - hole_dy/2 + hole_d','hole_d','hole_dx/2','(hole_dy/2 + fl_w/2 + slot_ov)/2',90); pocket('s_slot_entry','through','slot_entry'); "
-    "sk('s_slot_hook','pl_plate_back'); slot('s_slot_hook','hook_l','hole_d','hole_dx/2 - (hook_l - hole_d)/2','hole_dy/2'); pocket('s_slot_hook','through','slot_hook')",
+    "sk('s_slot_hook','pl_plate_back'); slot('s_slot_hook','hook_l','hook_w','hole_dx/2 - (hook_l - hole_d)/2','hole_dy/2'); pocket('s_slot_hook','through','slot_hook')",
     # 11: four slots by mirroring the corner across YZ and XZ
     HELPERS + '''mt = d.addObject("PartDesign::MultiTransform", "slots")
 mt.Originals = [d.slot_entry, d.slot_hook]
@@ -259,7 +258,8 @@ b.addObject(mi)
 mi.MirrorPlane = (org("XZ_Plane"), [""])
 done(mi, [d.pockets_side])''',
     # 15: finish: label, colour, hide datums, save, check
-    HELPERS + '''b.Label = "Pump"
+    HELPERS + '''b.Label = "Rotek_WPDC-06.7L-10M-24-VP"
+d.Comment = "ROTEK Food Grade Mini Centrifugal Pump with Brushless DC Motor, housing A01VP, 24 VDC, 6.7 L/min or 10 mWs. Model WPDC-06.7L-10M-24-VP (PUM409)."
 b.ViewObject.ShapeColor = (0.72, 0.80, 0.92)
 for o in d.Objects:
     if o.TypeId in ("PartDesign::Plane", "PartDesign::Line") or o.TypeId == "Sketcher::SketchObject":
