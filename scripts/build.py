@@ -11,7 +11,7 @@ slot corner + MultiTransform, +Y pockets + Mirrored, one ear and one face partit
 
 Holder (body "Holder"): a TPU 95A sock under the mounting face, printed flat on its glued floor
 with no bridges (vertical walls, 40 deg undersides only): side walls with preloaded lips, keys in
-the slot entries, snap pins with a widening head in the hook ends, corner stops.
+the slot entries, elongated snap bosses with widening heads along the hooks, corner stops.
 """
 import os
 import sys
@@ -127,11 +127,11 @@ PARAMS = [
     ('key_d', 2.0, 'Key depth into the slot entry from the plate edge'),
     ('key_h', 2.8, 'Key height (plate 3.0 thick)'),
     ('ret_y0', 19.6, 'Corner stops start at this |Y|: clear of the motor (R 18.36) and the lower ears (19.5)'),
-    ('pin_d', 3.2, 'Snap pin shaft diameter (slot hook 3.5 wide)'),
-    ('pin_hd', 4.2, 'Snap pin head diameter: squeezes through the 3.5 hook, then holds the plate'),
-    ('pin_cyl', 0.3, 'Snap pin head: straight part'),
-    ('pin_lead', 2.0, 'Snap pin head: lead-in cone height'),
-    ('pin_tip', 1.9, 'Snap pin tip diameter'),
+    ('pin_d', 3.2, 'Snap boss stem width across the 3.5-wide hook slot'),
+    ('pin_hd', 4.2, 'Snap boss head width across the hook slot: flexes through it, then holds the plate'),
+    ('pin_cyl', 0.3, 'Snap boss head: straight part'),
+    ('pin_lead', 2.0, 'Snap boss head: lead-in ramp height'),
+    ('pin_tip', 1.9, 'Snap boss tip width across the hook slot'),
     ('b_ch', 0.4, 'Bed chamfer height (elephant foot)'),
     ('b_cha', 40, 'Bed chamfer angle from vertical, deg'),
     (None, 'HOLDER DERIVED', None),
@@ -142,8 +142,8 @@ PARAMS = [
     ('z_bb', '-f_t', 'Z of the bed face'),
     ('lip_z0', 'fl_t - lip_pre - clr/tan(lip_a)', 'Z where the lip underside meets the wall'),
     ('lip_zt', 'lip_z0 + lip_o/tan(lip_a)', 'Z of the lip tip, bottom'),
-    ('pin_x', 'hole_dx/2 + hole_d/2 - hook_l + hook_w/2', 'Snap pin X: inner end of the slot hook'),
-    ('pin_h1', '(pin_hd - pin_d)/2/tan(lip_a)', 'Snap pin head: height of the widening part'),
+    ('pin_x', 'hole_dx/2 - (hook_l - hole_d)/2', 'Snap boss X: centre of the hook slot'),
+    ('pin_h1', '(pin_hd - pin_d)/2/tan(lip_a)', 'Snap boss head: height of the widening part'),
 ]
 
 
@@ -216,11 +216,6 @@ done(mi, [{', '.join('d.' + o for o in prev)}])'''
 # holder +Y side wall with the lip, YZ section (sketch x = Y, sketch y = Z); starts inside the floor
 WALL = [('wy', '-f_t/2'), ('wy2', '-f_t/2'), ('wy2', 'lip_zt + lip_tip + (w_t + lip_o)*tan(lip_r)'),
         ('wy - lip_o', 'lip_zt + lip_tip'), ('wy - lip_o', 'lip_zt'), ('wy', 'lip_z0')]
-# snap pin half profile, sketch x = radius from the pin axis, sketch y = Z (revolved about V_Axis)
-PIN = [('0', '0'), ('pin_d/2', '0'), ('pin_d/2', 'fl_t'), ('pin_hd/2', 'fl_t + pin_h1'),
-       ('pin_hd/2', 'fl_t + pin_h1 + pin_cyl'), ('pin_tip/2', 'fl_t + pin_h1 + pin_cyl + pin_lead'),
-       ('0', 'fl_t + pin_h1 + pin_cyl + pin_lead')]
-
 STEPS = [
     # fresh document (fdmkit new: params sheet + body "Body")
     f'new({DOC!r}); import FreeCAD as App; App.ActiveDocument.saveAs({FCSTD!r})',
@@ -338,15 +333,25 @@ d.recompute()
     "rect('s_h_stop','w_t','wy - ret_y0 + w_t/2','hx1 - w_t/2','(ret_y0 + wy + w_t/2)/2'); "
     "pad('s_h_stop','lip_zt','h_stop')",
     mirror_xz('Holder', 'h_side', ['h_wall', 'h_stop'], ['h_stop', 'h_wall']),
-    # one key into the slot entry (+X +Y) and one snap pin in the hook end, revolved on a datum
-    # plane through the pin axis
+    # one key into the slot entry (+X +Y), one elongated snap boss along the hook slot (-Y)
     "sk('s_h_key','XY'); rect('s_h_key','key_w','key_d + clr + w_t/2','hole_dx/2','fl_w/2 - key_d + (key_d + clr + w_t/2)/2'); pad('s_h_key','key_h','h_key'); "
-    "plane('hl_pin','XZ','hole_dy/2'); import FreeCAD; pl = FreeCAD.ActiveDocument.getObject('hl_pin'); pl.setExpression('.AttachmentOffset.Base.x', 'params.pin_x'); FreeCAD.ActiveDocument.recompute(); "
-    f"sk('s_h_pin','hl_pin'); poly('s_h_pin', {PIN!r}); revolve('s_h_pin', 360, 'V_Axis', 'h_pin'); "
-    "bb = FreeCAD.ActiveDocument.getObject('h_pin').AddSubShape.BoundBox; tuple(round(v, 2) for v in (bb.Center.x, bb.Center.y, bb.ZMin, bb.ZMax, bb.XLength))",
+    "sk('s_h_pin_base','XY'); slot('s_h_pin_base','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "
+    "plane('hl_pin_shaft','XY','fl_t'); sk('s_h_pin_shaft','hl_pin_shaft'); slot('s_h_pin_shaft','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "
+    "plane('hl_pin_head','XY','fl_t + pin_h1'); sk('s_h_pin_head','hl_pin_head'); slot('s_h_pin_head','hook_l - 2*clr','pin_hd','pin_x','-hole_dy/2',0); "
+    "plane('hl_pin_crown','XY','fl_t + pin_h1 + pin_cyl'); sk('s_h_pin_crown','hl_pin_crown'); slot('s_h_pin_crown','hook_l - 2*clr','pin_hd','pin_x','-hole_dy/2',0); "
+    "plane('hl_pin_tip','XY','fl_t + pin_h1 + pin_cyl + pin_lead'); sk('s_h_pin_tip','hl_pin_tip'); slot('s_h_pin_tip','hook_l - 2*clr','pin_tip','pin_x','-hole_dy/2',0); "
+    + helpers('Holder') + '''lo = d.addObject("PartDesign::AdditiveLoft", "h_pin")
+lo.Profile = (d.s_h_pin_base, [""])
+lo.Sections = [(d.s_h_pin_shaft, [""]), (d.s_h_pin_head, [""]), (d.s_h_pin_crown, [""]), (d.s_h_pin_tip, [""])]
+lo.Ruled = True
+lo.Label = "Snap boss"
+b.addObject(lo)
+b.Tip = lo
+done(lo, [d.h_key])''',
     mirror_multi('Holder', 'h_keys_pins', ['h_key', 'h_pin'], ['h_pin', 'h_key']),
     # holder finish
     helpers("Holder") + '''b.Label = "Holder"
+d.h_keys_pins.Label = "Keys and snap bosses"
 for o in d.Objects:
     if o.TypeId in ("PartDesign::Plane", "PartDesign::Line", "Sketcher::SketchObject"):
         o.Visibility = False
