@@ -11,3 +11,6 @@
 lancedb/
 __pycache__/
 
+# Original local history, including unmodified measurement photo metadata
+/.local-backup/
+
