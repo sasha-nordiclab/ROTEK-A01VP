@@ -1,8 +1,8 @@
 # ROTEK A01VP — pump model and accessories
 
 Parametric reference model of the Rotek WPDC-06.7L-10M-24-VP pump (PUM409)
-and accessories designed to fit it. The first accessory is a TPU holder that
-damps the pump's vibration.
+and accessories designed to fit it. The experimental TPU holder is intended
+to reduce vibration transfer; its performance has not yet been measured.
 
 The pump reference model and holder are maintained in this repository for use in both
 [JOBO Repair Parts](https://github.com/sasha-nordiclab/jobo-repair-parts) and
@@ -23,14 +23,14 @@ The pump reference model and holder are maintained in this repository for use in
 **Working model:** [TPU_Pump_Holder.FCStd](cad/TPU_Pump_Holder.FCStd).
 
 - Body **Rotek_WPDC-06.7L-10M-24-VP** is a reference model of the pump, built from the manufacturer's drawing, photos and caliper measurements. Every size is in the `params` spreadsheet.
-- Body **Holder** is the TPU sock holder (see below).
+- Body **Holder** is the experimental four-post stand (see below).
 
 ### Coordinates
 
 - Origin: the centre of the four mount slots, on the mounting face of the plate (z = 0).
 - X runs along the pump axis, with the inlet towards −X (inlet tip at x = −49).
 - Z points from the mounting face into the pump. The pump axis is at `ax_h` = 21.28 mm (from the drawing, not measured yet).
-- The holder goes below z = 0.
+- In the experimental assembly the pump reference Body is placed 12 mm above its original datum, matching `post_h`; its reference dimensions are unchanged. The stand spans z = −5…17.60 mm.
 
 ### Mount plate
 
@@ -55,21 +55,17 @@ The pump reference model and holder are maintained in this repository for use in
 - Inlet end: the short cone starts 12 mm from the inlet tip, runs 0.5 mm along the axis from Ø13.4 to Ø21.7, then continues as a cylindrical boss. The outlet tube retains its established axial position. The head length follows photo IMG_7253 (16.4 mm); the caliper reading of 14.0 disagrees and is to be measured again.
 - Along the axis, B2 + A2 + B3 is 1.0 mm shorter than the overall length B1. Until B17 and B18 are measured, the plate keeps the drawing position: 32 mm from the inlet tip.
 
-## Holder
+## Holder — four-post experiment
 
-A TPU 95A "sock" on the bottom of the bath (under water). Its flat bottom can be glued down; two M4 mounting holes also allow bolted fixing. The pump plate is pushed into it and stays there.
+A single TPU 95A stand on the bottom of the bath. Its flat floor can be glued down; two M4 holes still allow bolted fixing. Four columns hold the pump plate 12 mm above the floor. There are no side walls, side lips or entry keys in the final shape.
 
-- Body **Holder**, built by `scripts/build.py`; its params are in the HOLDER group of the `params` sheet.
-- Printed flat on the mounting face with no bridges: every wall is vertical; the lip and pin head undersides and bed chamfer use 40° from vertical. Print the floor solid: 100 % infill, zig-zag.
-- Parts:
-  - floor 5 mm under the plate, extended towards the inlet to the pump head face (X = −34 mm) so the correct orientation is obvious; the plate's mounting face rests on it;
-  - side walls 1.8 mm along the slotted edges, with lips over the plate back (1.0 mm overlap, 0.1 mm preload, so the pump cannot rattle);
-  - four keys that enter the open ends of the slot entries and hold the pump along its axis;
-  - four elongated snap bosses along the hook slots. Each stem follows the slot's rounded ends and spans 5.26 × 3.2 mm, leaving 0.1 mm at each end and 0.15 mm on each side. The head widens to 4.2 mm at 40° from vertical and has a lead-in ramp; the plate presses over it and cannot lift off.
-  - two M4 through holes on the floor centreline at X = −23.2 and +6.1 mm (Y = 0), with Ø4.5 mm clearance and 90° Ø9.6 mm countersinks on the pump side. The countersink rims are 6 mm from the two floor ends. Screw heads sit flush and are installed before the pump.
-  - the two inlet-end floor corners have a native PartDesign Fillet, R1.1 mm (`floor_corner_r`). Larger radii on these edges failed the FreeCAD shape validity check with the existing bed chamfer.
-- Overall 50.9 × 48.8 × 11.4 mm, 5 mm under the mounting face. The walls and catches retain their original positions; only the floor extends towards the inlet.
-- Material/profile: AzureFilm TPU, TPU95A Fine, 100 % zig-zag infill.
+- Body **Holder** is built by `scripts/build.py`; its dimensions are in the `params` sheet. The script retains the former sock operations in history, removes their material above the floor with a PartDesign Pocket, then adds the posts and elevated bosses.
+- Floor: 5 mm thick, X = −34…16.9 mm, extended towards the inlet to show the assembly orientation. The two inlet-end corners retain the native R1.1 mm Fillet.
+- Columns: four oval 7.2 × 6.0 mm posts at X ≈ ±8.92 mm, Y = ±17.5 mm, height `post_h=12` mm. Their top shoulders support the underside of the pump plate.
+- Catches: four elongated snap bosses continue above the columns into the hook slots. Stem width 3.2 mm; head width 4.2 mm with a 40° underside and lead-in. Parameter `post_head_pre=0.3 mm` sets a small nominal preload at the plate top. The plate is meant to snap over the heads. Retention against sliding along X without the former keys needs a physical test.
+- Mounting holes: two M4 through holes on the floor centreline at X = −23.2 and +6.1 mm, with Ø4.5 mm clearance and 90° Ø9.6 mm countersinks on the pump side.
+- Holder bounds: 50.9 × 48.8 × 22.60 mm, z = −5…17.60 mm. The pump and holder are distinct valid solids; their 0.078 mm³ nominal overlap is at the four snap heads.
+- Material/profile: AzureFilm TPU, TPU95A Fine, 100 % zig-zag infill. Slicing and snap fit remain untested. A preliminary vibration sensitivity calculation is in [four_post_vibration.md](docs/four_post_vibration.md); actual transmission remains unmeasured.
 
 ## Folders
 

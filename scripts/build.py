@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Rebuild TPU_Pump_Holder from scratch in the running FreeCAD: the pump reference body and the
-TPU sock holder. Every step is one fdmkit run() batch sent over XML-RPC; it stops at the first ERR.
+experimental TPU four-post stand. Every step is one fdmkit run() batch sent over XML-RPC; it stops at the first ERR.
 
   python3 scripts/build.py          closes the document and rebuilds everything
   python3 scripts/build.py 12       resumes from step 12 (document left open)
@@ -9,10 +9,10 @@ Pump (body "Body", label Rotek_WPDC-06.7L-10M-24-VP): origin at the slot pattern
 mounting face, X along the pump axis (inlet towards -X), Z into the pump. Native symmetry: one
 slot corner + MultiTransform, +Y pockets + Mirrored, one ear and one face partition + PolarPattern.
 
-Holder (body "Holder"): a TPU 95A sock under the mounting face, printed flat on its mounting
-floor. The floor extends to the pump head face as an orientation cue and has two countersunk
-M4 mounting holes on its centreline. Vertical side walls have preloaded lips, keys enter the
-slot entries, and elongated snap bosses with widening heads engage the hooks.
+Holder (body "Holder"): a TPU 95A floor with two countersunk M4 holes and four vertical
+columns. Their top shoulders support the pump plate 12 mm above the floor; elongated heads
+snap into its hook slots. The script retains the original sock features in history, then
+removes all material above the floor with a native Pocket before adding the columns.
 """
 import os
 import sys
@@ -136,6 +136,10 @@ PARAMS = [
     ('b_ch', 0.4, 'Bed chamfer height (elephant foot)'),
     ('b_cha', 40, 'Bed chamfer angle from vertical, deg'),
     ('floor_corner_r', 1.1, 'Native Fillet radius at the two inlet floor corners'),
+    ('post_h', 12, 'Air gap from the fixed floor to the pump plate; height of four support columns'),
+    ('post_l', 7.2, 'Support column footprint length along the pump axis'),
+    ('post_w', 6.0, 'Support column footprint width across the slot'),
+    ('post_head_pre', 0.3, 'Snap-head ramp starts below the plate top to lightly preload the slot edges'),
     (None, 'M4 MOUNTING', None),
     ('m4_clear', 4.5, 'Through clearance diameter for two M4 mounting screws'),
     ('m4_sink_d', 9.6, 'Top countersink diameter for ISO 14581 M4 flat heads'),
@@ -420,9 +424,51 @@ f.ViewObject.LineColor = d.Holder.ViewObject.LineColor
 h.Visibility = False
 f.Visibility = True
 f"Inlet Fillet: R {f.Radius}, V {f.Shape.Volume:.1f}"''',
+    # Experimental four-post stand. Remove all old material above the floor while
+    # retaining the finished floor, holes and inlet corner fillet.
+    "sk('s_post_clear','XY'); rect('s_post_clear','hx1 - floor_x0 + 20','2*wy2 + 20','(floor_x0 + hx1)/2',0); "
+    "pocket('s_post_clear',20,'post_clear',reverse=True)",
+    # One oval column, native mirrors to all four slot positions.
+    "sk('s_post_one','XY'); slot('s_post_one','post_l','post_w','pin_x','-hole_dy/2',0); "
+    "pad('s_post_one','post_h','post_one')",
+    mirror_multi('Holder', 'post_four', ['post_one'], ['post_one']),
+    # Repeat the original snap-boss sections above the columns. The wider top of
+    # each column bears on the underside of the slotted pump plate.
+    "plane('pl_post_boss_base','XY','post_h'); sk('s_post_boss_base','pl_post_boss_base'); "
+    "slot('s_post_boss_base','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "
+    "plane('pl_post_boss_shaft','XY','post_h + fl_t - post_head_pre'); sk('s_post_boss_shaft','pl_post_boss_shaft'); "
+    "slot('s_post_boss_shaft','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "
+    "plane('pl_post_boss_head','XY','post_h + fl_t + pin_h1 - post_head_pre'); sk('s_post_boss_head','pl_post_boss_head'); "
+    "slot('s_post_boss_head','hook_l - 2*clr','pin_hd','pin_x','-hole_dy/2',0); "
+    "plane('pl_post_boss_crown','XY','post_h + fl_t + pin_h1 + pin_cyl - post_head_pre'); sk('s_post_boss_crown','pl_post_boss_crown'); "
+    "slot('s_post_boss_crown','hook_l - 2*clr','pin_hd','pin_x','-hole_dy/2',0); "
+    "plane('pl_post_boss_tip','XY','post_h + fl_t + pin_h1 + pin_cyl + pin_lead - post_head_pre'); sk('s_post_boss_tip','pl_post_boss_tip'); "
+    "slot('s_post_boss_tip','hook_l - 2*clr','pin_tip','pin_x','-hole_dy/2',0)",
+    helpers('Holder') + '''lo = d.addObject("PartDesign::AdditiveLoft", "post_boss_one")
+lo.Profile = (d.s_post_boss_base, [""])
+lo.Sections = [(d.s_post_boss_shaft, [""]), (d.s_post_boss_head, [""]),
+               (d.s_post_boss_crown, [""]), (d.s_post_boss_tip, [""])]
+lo.Ruled = True
+lo.Label = "Elevated snap boss"
+b.addObject(lo)
+b.Tip = lo
+done(lo, [d.post_four])''',
+    mirror_multi('Holder', 'post_boss_four', ['post_boss_one'], ['post_boss_one']),
+    '''import FreeCAD as App
+d = App.ActiveDocument
+d.Body.setExpression("Placement.Base.z", "params.post_h")
+d.recompute()
+assert abs(d.Body.Placement.Base.z - float(d.params.get("post_h"))) < 1e-6
+assert d.Holder.Tip == d.post_boss_four
+assert d.Body.Shape.isValid() and d.Holder.Shape.isValid()
+"Pump raised onto four columns"''',
     # holder finish
     helpers("Holder") + '''b.Label = "Holder"
-d.h_keys_pins.Label = "Keys and snap bosses"
+d.h_keys_pins.Label = "Former keys and snap bosses (removed above floor)"
+d.post_clear.Label = "Remove former side latches and bosses"
+d.post_one.Label = "First support column"
+d.post_four.Label = "Four support columns"
+d.post_boss_four.Label = "Four elevated snap bosses"
 for o in d.Objects:
     if o.TypeId in ("PartDesign::Plane", "PartDesign::Line", "Sketcher::SketchObject"):
         o.Visibility = False
