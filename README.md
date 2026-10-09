@@ -52,7 +52,7 @@ The pump reference model and holder are maintained in this repository for use in
 
 - Round 1 (2026-10-07): 45 caliper readings, in `docs/measurements/readings.json` and the table in `docs/measurements/measurements.md`. The model follows them within ±0.1 mm (priority A) and ±0.2 mm (priority B), except the rows below.
 - Mounting face to the top of the motor (B10, 39.63 mm in the model) is not measured yet, so `ax_h` still comes from the drawing. The ear angle is derived from `ax_h` and the measured height of the highest ear lug: 40.5° now, against 35° on the drawing. B10 settles both.
-- Inlet end, from photo IMG_7253: the neck steps straight into the boss (no cone); the outlet tube runs along the boss, tangent to it, with its front flush with the boss face. The head length follows the photo (16.4 mm); the caliper reading of 14.0 disagrees and is to be measured again.
+- Inlet end, from photo IMG_7253: the neck steps straight into the boss (no cone). The outlet tube is shifted toward the inlet so its rear cylindrical surface is tangent to the head inlet plane; its axial position still needs a caliper check. The head length follows the photo (16.4 mm); the caliper reading of 14.0 disagrees and is to be measured again.
 - Along the axis, B2 + A2 + B3 is 1.0 mm shorter than the overall length B1. Until B17 and B18 are measured, the plate keeps the drawing position: 32 mm from the inlet tip.
 
 ## Holder

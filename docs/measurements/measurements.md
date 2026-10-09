@@ -58,7 +58,7 @@ Readings below: round 1, 2026-10-07.
 | B10 | A | Mounting face to the top of the motor (gives the axis height) | Outside jaws from the plate frame over the motor | 39.63 | — | — |  | not measured — *check* |
 | B11 | A | Table to the top of the highest ear lug | From the table, depth rod | 40.75 | — | 40.75 | +0.00 | caliper 40.75; drawing 42 |
 | B12 | A | Table to the outlet tip | From the table, depth rod | 51.4 | 52 | 51.4 | +0.00 | caliper 51.4 |
-| B13 | B | Inlet tip to the outlet axis | Outside jaws to the near side of the outlet, plus half of C13 | 15.75 | 16.5 | — |  | tube tangent to the boss, front flush with the boss face — *check* |
+| B13 | B | Inlet tip to the outlet axis | Outside jaws to the near side of the outlet, plus half of C13 | 11.5 | 16.5 | — |  | outlet shifted toward the inlet; tube rear surface tangent to the head inlet plane (measure) — *check* |
 | B14 | B | Outlet barb length (the Ø8 part) | Outside jaws | 5 | 5 | 5 | +0.00 | caliper 5.0 |
 | B15 | B | Step at the motor end: shoulder to the end face | Depth rod | 2 | — | 2 | +0.00 | caliper 2.0 |
 | B16 | B | Grommet height above the motor end face | Depth rod | 1.5 | — | — |  | guess |
