@@ -316,7 +316,7 @@ done(f, [d.pockets_side_mirror])''',
     # pump finish: label, colour
     helpers("Body") + '''b.Label = "Rotek_WPDC-06.7L-10M-24-VP"
 d.Comment = "ROTEK Food Grade Mini Centrifugal Pump with Brushless DC Motor, housing A01VP, 24 VDC, 6.7 L/min or 10 mWs. Model WPDC-06.7L-10M-24-VP (PUM409)."
-b.ViewObject.ShapeColor = (0.72, 0.80, 0.92)
+b.ViewObject.ShapeColor = (0.51, 0.74, 0.96)
 d.save()
 bb = b.Shape.BoundBox
 f"pump x {bb.XMin:.2f}..{bb.XMax:.2f} y {bb.YMin:.2f}..{bb.YMax:.2f} z {bb.ZMin:.2f}..{bb.ZMax:.2f} V {b.Shape.Volume:.1f} valid {b.Shape.isValid()}"''',
@@ -324,7 +324,7 @@ f"pump x {bb.XMin:.2f}..{bb.XMax:.2f} y {bb.YMin:.2f}..{bb.YMax:.2f} z {bb.ZMin:
     '''import FreeCAD as App, FreeCADGui as Gui
 d = App.ActiveDocument
 b = d.addObject("PartDesign::Body", "Holder")
-b.ViewObject.ShapeColor = (0.99, 0.80, 0.62)
+b.ViewObject.ShapeColor = (0.98, 0.64, 0.51)
 Gui.getDocument(d.Name).ActiveView.setActiveObject("pdbody", b)
 d.recompute()
 "Holder: OK"''',
