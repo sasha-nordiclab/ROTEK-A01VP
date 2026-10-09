@@ -11,7 +11,7 @@ slot corner + MultiTransform, +Y pockets + Mirrored, one ear and one face partit
 
 Holder (body "Holder"): a TPU 95A sock under the mounting face, printed flat on its glued floor
 with no bridges (vertical walls, 40 deg undersides only): side walls with preloaded lips, keys in
-the slot entries, elongated snap bosses with widening heads along the hooks, corner stops.
+the slot entries and elongated snap bosses with widening heads along the hooks.
 """
 import os
 import sys
@@ -126,7 +126,6 @@ PARAMS = [
     ('key_w', 3.0, 'Key width along X (slot entry 3.3)'),
     ('key_d', 2.0, 'Key depth into the slot entry from the plate edge'),
     ('key_h', 2.8, 'Key height (plate 3.0 thick)'),
-    ('ret_y0', 19.6, 'Corner stops start at this |Y|: clear of the motor (R 18.36) and the lower ears (19.5)'),
     ('pin_d', 3.2, 'Snap boss stem width across the 3.5-wide hook slot'),
     ('pin_hd', 4.2, 'Snap boss head width across the hook slot: flexes through it, then holds the plate'),
     ('pin_cyl', 0.3, 'Snap boss head: straight part'),
@@ -326,13 +325,9 @@ d.recompute()
     "rect('s_h_foot','hx1 - hx0 - 2*b_ch*tan(b_cha)','2*wy2 - 2*b_ch*tan(b_cha)','(hx0 + hx1)/2',0); pad('s_h_foot','b_ch','h_foot'); "
     "import FreeCAD; FreeCAD.ActiveDocument.getObject('h_foot').setExpression('TaperAngle', 'params.b_cha'); FreeCAD.ActiveDocument.recompute(); "
     "plane('hl_floor','XY','z_bb + b_ch'); sk('s_h_floor','hl_floor'); rect('s_h_floor','hx1 - hx0','2*wy2','(hx0 + hx1)/2',0); pad('s_h_floor','f_t - b_ch','h_floor')",
-    # +Y side wall with the lip; corner stops at both plate ends up to the lip tip
-    f"plane('hl_wall','YZ','hx0'); sk('s_h_wall','hl_wall'); poly('s_h_wall', {WALL!r}); pad('s_h_wall','hx1 - hx0','h_wall'); "
-    "sk('s_h_stop','XY'); "
-    "rect('s_h_stop','w_t','wy - ret_y0 + w_t/2','hx0 + w_t/2','(ret_y0 + wy + w_t/2)/2'); "
-    "rect('s_h_stop','w_t','wy - ret_y0 + w_t/2','hx1 - w_t/2','(ret_y0 + wy + w_t/2)/2'); "
-    "pad('s_h_stop','lip_zt','h_stop')",
-    mirror_xz('Holder', 'h_side', ['h_wall', 'h_stop'], ['h_stop', 'h_wall']),
+    # +Y side wall with the lip, mirrored to -Y
+    f"plane('hl_wall','YZ','hx0'); sk('s_h_wall','hl_wall'); poly('s_h_wall', {WALL!r}); pad('s_h_wall','hx1 - hx0','h_wall')",
+    mirror_xz('Holder', 'h_side', ['h_wall'], ['h_wall']),
     # one key into the slot entry (+X +Y), one elongated snap boss along the hook slot (-Y)
     "sk('s_h_key','XY'); rect('s_h_key','key_w','key_d + clr + w_t/2','hole_dx/2','fl_w/2 - key_d + (key_d + clr + w_t/2)/2'); pad('s_h_key','key_h','h_key'); "
     "sk('s_h_pin_base','XY'); slot('s_h_pin_base','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "

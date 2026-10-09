@@ -65,8 +65,7 @@ A TPU 95A "sock" glued to the bottom of the bath (under water). The pump plate i
   - floor 5 mm under the plate, the plate's mounting face rests on it;
   - side walls 1.8 mm along the slotted edges, with lips over the plate back (1.0 mm overlap, 0.1 mm preload, so the pump cannot rattle);
   - four keys that enter the open ends of the slot entries and hold the pump along its axis;
-  - four elongated snap bosses along the hook slots. Each stem follows the slot's rounded ends and spans 5.26 × 3.2 mm, leaving 0.1 mm at each end and 0.15 mm on each side. The head widens to 4.2 mm at 40° from vertical and has a lead-in ramp; the plate presses over it and cannot lift off;
-  - corner stops at the plate ends, up to the lip tip so they join the lips; clear of the motor, head and ears.
+  - four elongated snap bosses along the hook slots. Each stem follows the slot's rounded ends and spans 5.26 × 3.2 mm, leaving 0.1 mm at each end and 0.15 mm on each side. The head widens to 4.2 mm at 40° from vertical and has a lead-in ramp; the plate presses over it and cannot lift off.
 - Overall 35.8 × 48.8 × 11.4 mm, 5 mm under the mounting face.
 - Material/profile: AzureFilm TPU, TPU95A Fine, 100 % zig-zag infill.
 
