@@ -67,6 +67,7 @@ A TPU 95A "sock" on the bottom of the bath (under water). Its flat bottom can be
   - four keys that enter the open ends of the slot entries and hold the pump along its axis;
   - four elongated snap bosses along the hook slots. Each stem follows the slot's rounded ends and spans 5.26 × 3.2 mm, leaving 0.1 mm at each end and 0.15 mm on each side. The head widens to 4.2 mm at 40° from vertical and has a lead-in ramp; the plate presses over it and cannot lift off.
   - two M4 through holes on the floor centreline at X = −23.2 and +6.1 mm (Y = 0), with Ø4.5 mm clearance and 90° Ø9.6 mm countersinks on the pump side. The countersink rims are 6 mm from the two floor ends. Screw heads sit flush and are installed before the pump.
+  - the two inlet-end floor corners have a native PartDesign Fillet, R1.1 mm (`floor_corner_r`). Larger radii on these edges failed the FreeCAD shape validity check with the existing bed chamfer.
 - Overall 50.9 × 48.8 × 11.4 mm, 5 mm under the mounting face. The walls and catches retain their original positions; only the floor extends towards the inlet.
 - Material/profile: AzureFilm TPU, TPU95A Fine, 100 % zig-zag infill.
 

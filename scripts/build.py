@@ -135,6 +135,7 @@ PARAMS = [
     ('pin_tip', 1.9, 'Snap boss tip width across the hook slot'),
     ('b_ch', 0.4, 'Bed chamfer height (elephant foot)'),
     ('b_cha', 40, 'Bed chamfer angle from vertical, deg'),
+    ('floor_corner_r', 1.1, 'Native Fillet radius at the two inlet floor corners'),
     (None, 'M4 MOUNTING', None),
     ('m4_clear', 4.5, 'Through clearance diameter for two M4 mounting screws'),
     ('m4_sink_d', 9.6, 'Top countersink diameter for ISO 14581 M4 flat heads'),
@@ -391,6 +392,34 @@ d.recompute()
 assert h.BaseFeature == d.h_keys_pins and d.Holder.Tip == h
 assert h.Shape.isValid() and len(h.Shape.Solids) == 1
 f"M4 mount: DoF {s.DoF}, V {h.Shape.Volume:.1f}"''',
+    # standard PartDesign Fillet on the two vertical edges at the inlet floor end
+    '''import FreeCAD as App
+d = App.ActiveDocument
+p = d.params
+h = d.h_mount
+x = float(p.get("floor_x0"))
+y = float(p.get("wy2"))
+z = float(p.get("z_bb")) + float(p.get("b_ch"))
+edges = []
+for i, edge in enumerate(h.Shape.Edges, 1):
+    bb = edge.BoundBox
+    if (abs(bb.XMin - x) < 1e-5 and abs(bb.XMax - x) < 1e-5
+            and abs(abs(bb.YMin) - y) < 1e-5 and abs(bb.YMax - bb.YMin) < 1e-5
+            and abs(bb.ZMin - z) < 1e-5 and abs(bb.ZMax) < 1e-5):
+        edges.append("Edge" + str(i))
+assert len(edges) == 2, edges
+f = d.Holder.newObject("PartDesign::Fillet", "h_inlet_round")
+f.Base = (h, edges)
+f.setExpression("Radius", "params.floor_corner_r")
+f.Label = "Rounded inlet floor corners"
+d.Holder.Tip = f
+d.recompute()
+assert f.Shape.isValid() and len(f.Shape.Solids) == 1
+f.ViewObject.ShapeColor = d.Holder.ViewObject.ShapeColor
+f.ViewObject.LineColor = d.Holder.ViewObject.LineColor
+h.Visibility = False
+f.Visibility = True
+f"Inlet Fillet: R {f.Radius}, V {f.Shape.Volume:.1f}"''',
     # holder finish
     helpers("Holder") + '''b.Label = "Holder"
 d.h_keys_pins.Label = "Keys and snap bosses"
