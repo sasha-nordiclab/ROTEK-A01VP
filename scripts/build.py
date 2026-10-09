@@ -58,8 +58,8 @@ PARAMS = [
     ('out_len', 5, 'Outlet barb length (drawing)'),
     ('out_d2', 7, 'Outlet tube diameter below the barb (drawing)'),
     ('out_reach', 51.4, 'Mounting face to the outlet tip (caliper 51.4; drawing 52)'),
-    ('out_gap', 0, 'Outlet tube rear surface offset past the head inlet plane; zero makes it tangent'),
-    ('out_x', 'head_x0 - out_d2/2 + out_gap', 'Inlet tip to the outlet axis: tube rear surface tangent to the head inlet plane'),
+    ('out_gap', 0.05, 'Outlet tube front set back from the boss face plane: coplanar faces break the boolean (construction)'),
+    ('out_x', 'in_len + neck_len + out_d2/2 + out_gap', 'Inlet tip to the outlet axis: established outlet position'),
     ('out_y', -7.35, 'Outlet axis offset from the pump axis along Y (caliper 31.0 across tube and head, minus head_d/2 and out_d2/2; drawing 8)'),
     (None, 'CABLE GROMMET', None),
     ('grm_y', -9.3, 'Wire hole offset from the pump axis along Y, at axis height (photo)'),
@@ -268,8 +268,9 @@ pp.SuppressedIndices = [1]
 d.recompute()
 after = [has(ra + k * 90) for k in range(4)]
 f"{done(pp, [d.face_rib])} present at rib_a+k*90 before {before} after {after}"''',
-    # inlet boss (mini flange, straight step from the neck, no cone), neck, barb
-    "plane('pl_boss','YZ','x_tip + in_len + neck_len'); sk('s_boss','pl_boss'); circ('s_boss','boss_d',0,'ax_h'); pad('s_boss','head_x0 - cov_t - in_len - neck_len','boss'); "
+    # conical inlet boss: front matches the neck, rear reaches boss_d over the measured axial span
+    "plane('pl_boss','YZ','x_tip + in_len + neck_len'); sk('s_boss','pl_boss'); circ('s_boss','neck_d',0,'ax_h'); pad('s_boss','head_x0 - cov_t - in_len - neck_len','boss'); "
+    "import FreeCAD as App; App.ActiveDocument.getObject('boss').setExpression('TaperAngle', 'atan((params.boss_d - params.neck_d) / (2 * (params.head_x0 - params.cov_t - params.in_len - params.neck_len)))'); App.ActiveDocument.recompute(); "
     "plane('pl_neck','YZ','x_tip + in_len'); sk('s_neck','pl_neck'); circ('s_neck','neck_d',0,'ax_h'); pad('s_neck','neck_len','neck'); "
     "plane('pl_inlet','YZ','x_tip'); sk('s_inlet','pl_inlet'); circ('s_inlet','in_d',0,'ax_h'); pad('s_inlet','in_len','inlet')",
     # outlet and grommet
