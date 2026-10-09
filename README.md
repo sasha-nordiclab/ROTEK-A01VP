@@ -57,16 +57,17 @@ The pump reference model and holder are maintained in this repository for use in
 
 ## Holder
 
-A TPU 95A "sock" glued to the bottom of the bath (under water). The pump plate is pushed into it and stays there.
+A TPU 95A "sock" on the bottom of the bath (under water). Its flat bottom can be glued down; two M4 mounting holes also allow bolted fixing. The pump plate is pushed into it and stays there.
 
 - Body **Holder**, built by `scripts/build.py`; its params are in the HOLDER group of the `params` sheet.
-- Printed flat on the glued face with no bridges: every wall is vertical, the only overhangs are 40° from vertical (lip and pin head undersides, bed chamfer). Print the floor solid: 100 % infill, zig-zag.
+- Printed flat on the mounting face with no bridges: every wall is vertical; the lip and pin head undersides and bed chamfer use 40° from vertical. Print the floor solid: 100 % infill, zig-zag.
 - Parts:
-  - floor 5 mm under the plate, the plate's mounting face rests on it;
+  - floor 5 mm under the plate, extended towards the inlet to the pump head face (X = −34 mm) so the correct orientation is obvious; the plate's mounting face rests on it;
   - side walls 1.8 mm along the slotted edges, with lips over the plate back (1.0 mm overlap, 0.1 mm preload, so the pump cannot rattle);
   - four keys that enter the open ends of the slot entries and hold the pump along its axis;
   - four elongated snap bosses along the hook slots. Each stem follows the slot's rounded ends and spans 5.26 × 3.2 mm, leaving 0.1 mm at each end and 0.15 mm on each side. The head widens to 4.2 mm at 40° from vertical and has a lead-in ramp; the plate presses over it and cannot lift off.
-- Overall 35.8 × 48.8 × 11.4 mm, 5 mm under the mounting face.
+  - two M4 through holes on the floor centreline at X = −23.2 and +6.1 mm (Y = 0), with Ø4.5 mm clearance and 90° Ø9.6 mm countersinks on the pump side. The countersink rims are 6 mm from the two floor ends. Screw heads sit flush and are installed before the pump.
+- Overall 50.9 × 48.8 × 11.4 mm, 5 mm under the mounting face. The walls and catches retain their original positions; only the floor extends towards the inlet.
 - Material/profile: AzureFilm TPU, TPU95A Fine, 100 % zig-zag infill.
 
 ## Folders

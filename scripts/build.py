@@ -9,9 +9,10 @@ Pump (body "Body", label Rotek_WPDC-06.7L-10M-24-VP): origin at the slot pattern
 mounting face, X along the pump axis (inlet towards -X), Z into the pump. Native symmetry: one
 slot corner + MultiTransform, +Y pockets + Mirrored, one ear and one face partition + PolarPattern.
 
-Holder (body "Holder"): a TPU 95A sock under the mounting face, printed flat on its glued floor
-with no bridges (vertical walls, 40 deg undersides only): side walls with preloaded lips, keys in
-the slot entries and elongated snap bosses with widening heads along the hooks.
+Holder (body "Holder"): a TPU 95A sock under the mounting face, printed flat on its mounting
+floor. The floor extends to the pump head face as an orientation cue and has two countersunk
+M4 mounting holes on its centreline. Vertical side walls have preloaded lips, keys enter the
+slot entries, and elongated snap bosses with widening heads engage the hooks.
 """
 import os
 import sys
@@ -134,11 +135,19 @@ PARAMS = [
     ('pin_tip', 1.9, 'Snap boss tip width across the hook slot'),
     ('b_ch', 0.4, 'Bed chamfer height (elephant foot)'),
     ('b_cha', 40, 'Bed chamfer angle from vertical, deg'),
+    (None, 'M4 MOUNTING', None),
+    ('m4_clear', 4.5, 'Through clearance diameter for two M4 mounting screws'),
+    ('m4_sink_d', 9.6, 'Top countersink diameter for ISO 14581 M4 flat heads'),
+    ('m4_sink_a', 90, 'Countersink included angle, deg'),
+    ('m4_rim', 6, 'Material from each floor end to the countersink rim'),
     (None, 'HOLDER DERIVED', None),
     ('wy', 'fl_w/2 + clr', 'Side wall inner face |Y|'),
     ('wy2', 'wy + w_t', 'Side wall outer face |Y|'),
     ('hx0', 'x_fs - clr - w_t', 'Holder start X (inlet end)'),
     ('hx1', 'x_fe + clr + w_t', 'Holder end X (motor end)'),
+    ('floor_x0', 'x_tip + head_x0', 'Inlet-side floor edge, aligned with the pump head face; gives an orientation cue'),
+    ('m4_x_in', 'floor_x0 + m4_sink_d/2 + m4_rim', 'Inlet-side M4 centre X'),
+    ('m4_x_out', 'hx1 - m4_sink_d/2 - m4_rim', 'Motor-side M4 centre X'),
     ('z_bb', '-f_t', 'Z of the bed face'),
     ('lip_z0', 'fl_t - lip_pre - clr/tan(lip_a)', 'Z where the lip underside meets the wall'),
     ('lip_zt', 'lip_z0 + lip_o/tan(lip_a)', 'Z of the lip tip, bottom'),
@@ -328,11 +337,12 @@ b.ViewObject.ShapeColor = (0.98, 0.64, 0.51)
 Gui.getDocument(d.Name).ActiveView.setActiveObject("pdbody", b)
 d.recompute()
 "Holder: OK"''',
-    # floor; the first b_ch is padded with a taper (positive grows outwards) for the bed chamfer
+    # floor reaches the pump head face at floor_x0; walls still start at hx0
+    # the first b_ch is padded with a taper (positive grows outwards) for the bed chamfer
     "plane('hl_bed','XY','z_bb'); sk('s_h_foot','hl_bed'); "
-    "rect('s_h_foot','hx1 - hx0 - 2*b_ch*tan(b_cha)','2*wy2 - 2*b_ch*tan(b_cha)','(hx0 + hx1)/2',0); pad('s_h_foot','b_ch','h_foot'); "
+    "rect('s_h_foot','hx1 - floor_x0 - 2*b_ch*tan(b_cha)','2*wy2 - 2*b_ch*tan(b_cha)','(floor_x0 + hx1)/2',0); pad('s_h_foot','b_ch','h_foot'); "
     "import FreeCAD; FreeCAD.ActiveDocument.getObject('h_foot').setExpression('TaperAngle', 'params.b_cha'); FreeCAD.ActiveDocument.recompute(); "
-    "plane('hl_floor','XY','z_bb + b_ch'); sk('s_h_floor','hl_floor'); rect('s_h_floor','hx1 - hx0','2*wy2','(hx0 + hx1)/2',0); pad('s_h_floor','f_t - b_ch','h_floor')",
+    "plane('hl_floor','XY','z_bb + b_ch'); sk('s_h_floor','hl_floor'); rect('s_h_floor','hx1 - floor_x0','2*wy2','(floor_x0 + hx1)/2',0); pad('s_h_floor','f_t - b_ch','h_floor')",
     # +Y side wall with the lip, mirrored to -Y
     f"plane('hl_wall','YZ','hx0'); sk('s_h_wall','hl_wall'); poly('s_h_wall', {WALL!r}); pad('s_h_wall','hx1 - hx0','h_wall')",
     mirror_xz('Holder', 'h_side', ['h_wall'], ['h_wall']),
@@ -352,6 +362,35 @@ b.addObject(lo)
 b.Tip = lo
 done(lo, [d.h_key])''',
     mirror_multi('Holder', 'h_keys_pins', ['h_key', 'h_pin'], ['h_pin', 'h_key']),
+    # two through M4 holes on the floor centreline; 90 deg countersinks face the pump
+    '''import FreeCAD as App, FreeCADGui as Gui, Part, Sketcher
+d = App.ActiveDocument
+Gui.getDocument(d.Name).ActiveView.setActiveObject("pdbody", d.Holder)
+sk("s_h_mount", "XY")
+circ("s_h_mount", "m4_clear", "m4_x_in", 0)
+s = d.getObject("s_h_mount")
+p = d.getObject("params")
+g = s.addGeometry(Part.Circle(App.Vector(float(p.get("m4_x_out")), 0, 0), App.Vector(0, 0, 1), float(p.get("m4_clear"))/2))
+s.addConstraint(Sketcher.Constraint("Equal", 0, g))
+s.addConstraint(Sketcher.Constraint("PointOnObject", g, 3, -1))
+i = s.addConstraint(Sketcher.Constraint("DistanceX", -1, 1, g, 3, float(p.get("m4_x_out"))))
+s.renameConstraint(i, "mount_x_out")
+s.setExpression("Constraints.mount_x_out", "params.m4_x_out")
+d.recompute()
+assert s.FullyConstrained and not s.ConflictingConstraints and not s.RedundantConstraints
+hole("s_h_mount", "m4_clear", "through", "h_mount")
+h = d.getObject("h_mount")
+h.HoleCutType = "Countersink"
+h.setExpression("HoleCutDiameter", "params.m4_sink_d")
+h.setExpression("HoleCutCountersinkAngle", "params.m4_sink_a")
+h.DrillPoint = "Flat"
+h.Label = "M4 mounting holes and countersinks"
+h.ViewObject.ShapeColor = d.Holder.ViewObject.ShapeColor
+h.ViewObject.LineColor = d.Holder.ViewObject.LineColor
+d.recompute()
+assert h.BaseFeature == d.h_keys_pins and d.Holder.Tip == h
+assert h.Shape.isValid() and len(h.Shape.Solids) == 1
+f"M4 mount: DoF {s.DoF}, V {h.Shape.Volume:.1f}"''',
     # holder finish
     helpers("Holder") + '''b.Label = "Holder"
 d.h_keys_pins.Label = "Keys and snap bosses"
