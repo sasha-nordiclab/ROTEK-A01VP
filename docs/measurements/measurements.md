@@ -53,7 +53,7 @@ Readings below: round 1, 2026-10-07.
 | B5 | B | Inlet tip to the face of the Ø32 cover | Depth rod or outside jaws | 13.5 | — | — |  | guess — *check* |
 | B6 | B | Head length: ear-lug face to the joint with the motor | Outside jaws | 16.4 | 15.5 | 14 | -2.40 ✗ | photo 16.4; caliper 14.0 disagrees — *check* |
 | B7 | B | Inlet barb length (the Ø14.4 part) | Outside jaws | 4 | 4 | 4 | +0.00 | caliper 4.0 |
-| B8 | B | Neck length (the Ø13.4 part) | Outside jaws | 8.2 | 7 | 8.2 | +0.00 | caliper 8.2 |
+| B8 | B | Straight neck length (the Ø13.4 part) | Outside jaws | 8 | 7 | 8.2 | +0.20 | 12 mm from inlet tip to cone start, minus 4 mm inlet barb; earlier caliper 8.2 |
 | B9 | B | Neck diameter | Outside jaws | 13.4 | 13.4 | 13.5 | +0.10 | caliper 13.5 |
 | B10 | A | Mounting face to the top of the motor (gives the axis height) | Outside jaws from the plate frame over the motor | 39.63 | — | — |  | not measured — *check* |
 | B11 | A | Table to the top of the highest ear lug | From the table, depth rod | 40.75 | — | 40.75 | +0.00 | caliper 40.75; drawing 42 |

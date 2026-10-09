@@ -47,7 +47,9 @@ PARAMS = [
     ('in_d', 14.4, 'Inlet barb diameter (drawing)'),
     ('in_len', 4, 'Inlet barb length (drawing)'),
     ('neck_d', 13.4, 'Inlet neck diameter (drawing)'),
-    ('neck_len', 8.2, 'Inlet neck length (caliper 8.2; drawing 7)'),
+    ('cone_start', 12, 'Inlet tip to start of the short conical transition (user measurement)'),
+    ('neck_len', 'cone_start - in_len', 'Straight inlet neck length, derived from cone_start minus inlet barb length'),
+    ('cone_len', 0.5, 'Axial length of the short taper from the inlet neck to the cylindrical boss'),
     (None, 'INLET FACE', None),
     ('cov_d', 31.99, 'Raised cover on the inlet face (caliper)'),
     ('rib_t', 2.17, 'Partition width on the inlet face (caliper)'),
@@ -58,8 +60,7 @@ PARAMS = [
     ('out_len', 5, 'Outlet barb length (drawing)'),
     ('out_d2', 7, 'Outlet tube diameter below the barb (drawing)'),
     ('out_reach', 51.4, 'Mounting face to the outlet tip (caliper 51.4; drawing 52)'),
-    ('out_gap', 0.05, 'Outlet tube front set back from the boss face plane: coplanar faces break the boolean (construction)'),
-    ('out_x', 'in_len + neck_len + out_d2/2 + out_gap', 'Inlet tip to the outlet axis: established outlet position'),
+    ('out_x', 15.75, 'Inlet tip to outlet axis; established position, independent of inlet cone'),
     ('out_y', -7.35, 'Outlet axis offset from the pump axis along Y (caliper 31.0 across tube and head, minus head_d/2 and out_d2/2; drawing 8)'),
     (None, 'CABLE GROMMET', None),
     ('grm_y', -9.3, 'Wire hole offset from the pump axis along Y, at axis height (photo)'),
@@ -268,10 +269,9 @@ pp.SuppressedIndices = [1]
 d.recompute()
 after = [has(ra + k * 90) for k in range(4)]
 f"{done(pp, [d.face_rib])} present at rib_a+k*90 before {before} after {after}"''',
-    # conical inlet boss: front matches the neck, rear reaches boss_d over the measured axial span
-    "plane('pl_boss','YZ','x_tip + in_len + neck_len'); sk('s_boss','pl_boss'); circ('s_boss','neck_d',0,'ax_h'); pad('s_boss','head_x0 - cov_t - in_len - neck_len','boss'); "
-    "import FreeCAD as App; App.ActiveDocument.getObject('boss').setExpression('TaperAngle', 'atan((params.boss_d - params.neck_d) / (2 * (params.head_x0 - params.cov_t - params.in_len - params.neck_len)))'); App.ActiveDocument.recompute(); "
-    "plane('pl_neck','YZ','x_tip + in_len'); sk('s_neck','pl_neck'); circ('s_neck','neck_d',0,'ax_h'); pad('s_neck','neck_len','neck'); "
+    # cylindrical boss starts after the short cone; the neck's internal core connects it
+    "plane('pl_boss','YZ','x_tip + in_len + neck_len + cone_len'); sk('s_boss','pl_boss'); circ('s_boss','boss_d',0,'ax_h'); pad('s_boss','head_x0 - cov_t - in_len - neck_len - cone_len','boss'); "
+    "plane('pl_neck','YZ','x_tip + in_len'); sk('s_neck','pl_neck'); circ('s_neck','neck_d',0,'ax_h'); pad('s_neck','neck_len + cone_len','neck'); "
     "plane('pl_inlet','YZ','x_tip'); sk('s_inlet','pl_inlet'); circ('s_inlet','in_d',0,'ax_h'); pad('s_inlet','in_len','inlet')",
     # outlet and grommet
     "plane('pl_axis','XY','ax_h'); sk('s_outlet_tube','pl_axis'); circ('s_outlet_tube','out_d2','x_tip + out_x','out_y'); pad('s_outlet_tube','out_reach - out_len - ax_h','outlet_tube'); "
@@ -306,6 +306,13 @@ mi.Originals = [d.pockets_side]
 b.addObject(mi)
 mi.MirrorPlane = (org("XZ_Plane"), [""])
 done(mi, [d.pockets_side])''',
+    # 0.5 mm axial cone on the inlet face, added around the neck's internal core
+    "plane('pl_boss_cone','YZ','x_tip + cone_start'); sk('s_boss_cone','pl_boss_cone'); circ('s_boss_cone','neck_d',0,'ax_h'); "
+    + helpers('Body') + '''f = b.newObject("PartDesign::Pad", "boss_cone")
+f.Profile = d.s_boss_cone
+f.setExpression("Length", "params.cone_len")
+f.setExpression("TaperAngle", "atan((params.boss_d - params.neck_d)/(2*params.cone_len))")
+done(f, [d.pockets_side_mirror])''',
     # pump finish: label, colour
     helpers("Body") + '''b.Label = "Rotek_WPDC-06.7L-10M-24-VP"
 d.Comment = "ROTEK Food Grade Mini Centrifugal Pump with Brushless DC Motor, housing A01VP, 24 VDC, 6.7 L/min or 10 mWs. Model WPDC-06.7L-10M-24-VP (PUM409)."

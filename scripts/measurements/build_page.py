@@ -102,7 +102,7 @@ row('B4', 'Inlet tip to the ear-lug face, under the screw heads', DR + ' or outs
 row('B5', 'Inlet tip to the face of the Ø32 cover', DR + ' or outside jaws', 'B', x_cov - xt, None, 'guess', True)
 row('B6', 'Head length: ear-lug face to the joint with the motor', OJ, 'B', hx1 - hx0, 15.5, 'photo 16.4; caliper 14.0 disagrees', True)
 row('B7', 'Inlet barb length (the Ø14.4 part)', OJ, 'B', p['in_len'], 4, 'caliper 4.0')
-row('B8', 'Neck length (the Ø13.4 part)', OJ, 'B', p['neck_len'], 7, 'caliper 8.2')
+row('B8', 'Straight neck length (the Ø13.4 part)', OJ, 'B', p['neck_len'], 7, '12 mm from inlet tip to cone start, minus 4 mm inlet barb; earlier caliper 8.2')
 row('B9', 'Neck diameter', OJ, 'B', p['neck_d'], 13.4, 'caliper 13.5')
 row('B10', 'Mounting face to the top of the motor (gives the axis height)', OJ + ' from the plate frame over the motor', 'A', ax + Rm, None, 'not measured', True)
 row('B11', 'Table to the top of the highest ear lug', TB + ', depth rod', 'A', EAR['B'][1] + er, None, 'caliper 40.75; drawing 42')
