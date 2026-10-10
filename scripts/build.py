@@ -11,8 +11,8 @@ slot corner + MultiTransform, +Y pockets + Mirrored, one ear and one face partit
 
 Holder (body "Holder"): a TPU 95A floor with two countersunk M4 holes and four vertical
 columns. Their top shoulders support the pump plate 4 mm above the floor; elongated heads
-snap into its hook slots. The script retains the original sock features in history, then
-removes all material above the floor with a native Pocket before adding the columns.
+snap into its hook slots. The Holder tree contains only the floor, inlet corner Fillet,
+mirrored columns, mirrored lofted bosses, and the final pair of countersunk holes.
 """
 import os
 import sys
@@ -219,17 +219,6 @@ m1.Visibility = m2.Visibility = False
 done(mt, [{', '.join('d.' + o for o in prev)}])'''
 
 
-def mirror_xz(body, name, originals, prev):
-    return helpers(body) + f'''mi = d.addObject("PartDesign::Mirrored", {name!r})
-mi.Originals = [{', '.join('d.' + o for o in originals)}]
-b.addObject(mi)
-mi.MirrorPlane = (org("XZ_Plane"), [""])
-done(mi, [{', '.join('d.' + o for o in prev)}])'''
-
-
-# holder +Y side wall with the lip, YZ section (sketch x = Y, sketch y = Z); starts inside the floor
-WALL = [('wy', '-f_t/2'), ('wy2', '-f_t/2'), ('wy2', 'lip_zt + lip_tip + (w_t + lip_o)*tan(lip_r)'),
-        ('wy - lip_o', 'lip_zt + lip_tip'), ('wy - lip_o', 'lip_zt'), ('wy', 'lip_z0')]
 STEPS = [
     # fresh document (fdmkit new: params sheet + body "Body")
     f'new({DOC!r}); import FreeCAD as App; App.ActiveDocument.saveAs({FCSTD!r})',
@@ -342,65 +331,17 @@ b.ViewObject.ShapeColor = (0.98, 0.64, 0.51)
 Gui.getDocument(d.Name).ActiveView.setActiveObject("pdbody", b)
 d.recompute()
 "Holder: OK"''',
-    # floor reaches the pump head face at floor_x0; walls still start at hx0
+    # floor reaches the pump head face at floor_x0
     # the first b_ch is padded with a taper (positive grows outwards) for the bed chamfer
     "plane('hl_bed','XY','z_bb'); sk('s_h_foot','hl_bed'); "
     "rect('s_h_foot','hx1 - floor_x0 - 2*b_ch*tan(b_cha)','2*wy2 - 2*b_ch*tan(b_cha)','(floor_x0 + hx1)/2',0); pad('s_h_foot','b_ch','h_foot'); "
     "import FreeCAD; FreeCAD.ActiveDocument.getObject('h_foot').setExpression('TaperAngle', 'params.b_cha'); FreeCAD.ActiveDocument.recompute(); "
     "plane('hl_floor','XY','z_bb + b_ch'); sk('s_h_floor','hl_floor'); rect('s_h_floor','hx1 - floor_x0','2*wy2','(floor_x0 + hx1)/2',0); pad('s_h_floor','f_t - b_ch','h_floor')",
-    # +Y side wall with the lip, mirrored to -Y
-    f"plane('hl_wall','YZ','hx0'); sk('s_h_wall','hl_wall'); poly('s_h_wall', {WALL!r}); pad('s_h_wall','hx1 - hx0','h_wall')",
-    mirror_xz('Holder', 'h_side', ['h_wall'], ['h_wall']),
-    # one key into the slot entry (+X +Y), one elongated snap boss along the hook slot (-Y)
-    "sk('s_h_key','XY'); rect('s_h_key','key_w','key_d + clr + w_t/2','hole_dx/2','fl_w/2 - key_d + (key_d + clr + w_t/2)/2'); pad('s_h_key','key_h','h_key'); "
-    "sk('s_h_pin_base','XY'); slot('s_h_pin_base','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "
-    "plane('hl_pin_shaft','XY','fl_t'); sk('s_h_pin_shaft','hl_pin_shaft'); slot('s_h_pin_shaft','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "
-    "plane('hl_pin_head','XY','fl_t + pin_h1'); sk('s_h_pin_head','hl_pin_head'); slot('s_h_pin_head','hook_l - 2*clr','pin_hd','pin_x','-hole_dy/2',0); "
-    "plane('hl_pin_crown','XY','fl_t + pin_h1 + pin_cyl'); sk('s_h_pin_crown','hl_pin_crown'); slot('s_h_pin_crown','hook_l - 2*clr','pin_hd','pin_x','-hole_dy/2',0); "
-    "plane('hl_pin_tip','XY','fl_t + pin_h1 + pin_cyl + pin_lead'); sk('s_h_pin_tip','hl_pin_tip'); slot('s_h_pin_tip','hook_l - 2*clr','pin_tip','pin_x','-hole_dy/2',0); "
-    + helpers('Holder') + '''lo = d.addObject("PartDesign::AdditiveLoft", "h_pin")
-lo.Profile = (d.s_h_pin_base, [""])
-lo.Sections = [(d.s_h_pin_shaft, [""]), (d.s_h_pin_head, [""]), (d.s_h_pin_crown, [""]), (d.s_h_pin_tip, [""])]
-lo.Ruled = True
-lo.Label = "Snap boss"
-b.addObject(lo)
-b.Tip = lo
-done(lo, [d.h_key])''',
-    mirror_multi('Holder', 'h_keys_pins', ['h_key', 'h_pin'], ['h_pin', 'h_key']),
-    # two through M4 holes on the floor centreline; 90 deg countersinks face the pump
-    '''import FreeCAD as App, FreeCADGui as Gui, Part, Sketcher
-d = App.ActiveDocument
-Gui.getDocument(d.Name).ActiveView.setActiveObject("pdbody", d.Holder)
-sk("s_h_mount", "XY")
-circ("s_h_mount", "m4_clear", "m4_x_in", 0)
-s = d.getObject("s_h_mount")
-p = d.getObject("params")
-g = s.addGeometry(Part.Circle(App.Vector(float(p.get("m4_x_out")), 0, 0), App.Vector(0, 0, 1), float(p.get("m4_clear"))/2))
-s.addConstraint(Sketcher.Constraint("Equal", 0, g))
-s.addConstraint(Sketcher.Constraint("PointOnObject", g, 3, -1))
-i = s.addConstraint(Sketcher.Constraint("DistanceX", -1, 1, g, 3, float(p.get("m4_x_out"))))
-s.renameConstraint(i, "mount_x_out")
-s.setExpression("Constraints.mount_x_out", "params.m4_x_out")
-d.recompute()
-assert s.FullyConstrained and not s.ConflictingConstraints and not s.RedundantConstraints
-hole("s_h_mount", "m4_clear", "through", "h_mount")
-h = d.getObject("h_mount")
-h.HoleCutType = "Countersink"
-h.setExpression("HoleCutDiameter", "params.m4_sink_d")
-h.setExpression("HoleCutCountersinkAngle", "params.m4_sink_a")
-h.DrillPoint = "Flat"
-h.Label = "M4 mounting holes and countersinks"
-h.ViewObject.ShapeColor = d.Holder.ViewObject.ShapeColor
-h.ViewObject.LineColor = d.Holder.ViewObject.LineColor
-d.recompute()
-assert h.BaseFeature == d.h_keys_pins and d.Holder.Tip == h
-assert h.Shape.isValid() and len(h.Shape.Solids) == 1
-f"M4 mount: DoF {s.DoF}, V {h.Shape.Volume:.1f}"''',
     # standard PartDesign Fillet on the two vertical edges at the inlet floor end
     '''import FreeCAD as App
 d = App.ActiveDocument
 p = d.params
-h = d.h_mount
+h = d.h_floor
 x = float(p.get("floor_x0"))
 y = float(p.get("wy2"))
 z = float(p.get("z_bb")) + float(p.get("b_ch"))
@@ -412,7 +353,7 @@ for i, edge in enumerate(h.Shape.Edges, 1):
             and abs(bb.ZMin - z) < 1e-5 and abs(bb.ZMax) < 1e-5):
         edges.append("Edge" + str(i))
 assert len(edges) == 2, edges
-f = d.Holder.newObject("PartDesign::Fillet", "h_inlet_round")
+f = d.Holder.newObject("PartDesign::Fillet", "floor_corner_fillet")
 f.Base = (h, edges)
 f.setExpression("Radius", "params.floor_corner_r")
 f.Label = "Rounded inlet floor corners"
@@ -424,10 +365,6 @@ f.ViewObject.LineColor = d.Holder.ViewObject.LineColor
 h.Visibility = False
 f.Visibility = True
 f"Inlet Fillet: R {f.Radius}, V {f.Shape.Volume:.1f}"''',
-    # Experimental four-post stand. Remove all old material above the floor while
-    # retaining the finished floor, holes and inlet corner fillet.
-    "sk('s_post_clear','XY'); rect('s_post_clear','hx1 - floor_x0 + 20','2*wy2 + 20','(floor_x0 + hx1)/2',0); "
-    "pocket('s_post_clear',20,'post_clear',reverse=True)",
     # One oval column, native mirrors to all four slot positions.
     "sk('s_post_one','XY'); slot('s_post_one','post_l','post_w','pin_x','-hole_dy/2',0); "
     "pad('s_post_one','post_h','post_one')",
@@ -454,25 +391,63 @@ b.addObject(lo)
 b.Tip = lo
 done(lo, [d.post_four])''',
     mirror_multi('Holder', 'post_boss_four', ['post_boss_one'], ['post_boss_one']),
+    # two through M4 holes on the floor centreline; 90 deg countersinks face the pump
+    '''import FreeCAD as App, FreeCADGui as Gui, Part, Sketcher
+d = App.ActiveDocument
+Gui.getDocument(d.Name).ActiveView.setActiveObject("pdbody", d.Holder)
+sk("s_h_mount", "XY")
+circ("s_h_mount", "m4_clear", "m4_x_in", 0)
+s = d.getObject("s_h_mount")
+p = d.getObject("params")
+g = s.addGeometry(Part.Circle(App.Vector(float(p.get("m4_x_out")), 0, 0), App.Vector(0, 0, 1), float(p.get("m4_clear"))/2))
+s.addConstraint(Sketcher.Constraint("Equal", 0, g))
+s.addConstraint(Sketcher.Constraint("PointOnObject", g, 3, -1))
+i = s.addConstraint(Sketcher.Constraint("DistanceX", -1, 1, g, 3, float(p.get("m4_x_out"))))
+s.renameConstraint(i, "mount_x_out")
+s.setExpression("Constraints.mount_x_out", "params.m4_x_out")
+d.recompute()
+assert s.FullyConstrained and not s.ConflictingConstraints and not s.RedundantConstraints
+hole("s_h_mount", "m4_clear", "through", "h_mount")
+h = d.getObject("h_mount")
+h.HoleCutType = "Countersink"
+h.setExpression("HoleCutDiameter", "params.m4_sink_d")
+h.setExpression("HoleCutCountersinkAngle", "params.m4_sink_a")
+h.DrillPoint = "Flat"
+h.Label = "M4 mounting holes and countersinks"
+h.ViewObject.ShapeColor = d.Holder.ViewObject.ShapeColor
+h.ViewObject.LineColor = d.Holder.ViewObject.LineColor
+d.recompute()
+assert h.BaseFeature == d.post_boss_four and d.Holder.Tip == h
+assert h.Shape.isValid() and len(h.Shape.Solids) == 1
+f"M4 mount: DoF {s.DoF}, V {h.Shape.Volume:.1f}"''',
     '''import FreeCAD as App
 d = App.ActiveDocument
 d.Body.setExpression("Placement.Base.z", "params.post_h")
 d.recompute()
 assert abs(d.Body.Placement.Base.z - float(d.params.get("post_h"))) < 1e-6
-assert d.Holder.Tip == d.post_boss_four
+assert d.Holder.Tip == d.h_mount
 assert d.Body.Shape.isValid() and d.Holder.Shape.isValid()
 "Pump raised onto four columns"''',
     # holder finish
-    helpers("Holder") + '''b.Label = "Holder"
-d.h_keys_pins.Label = "Former keys and snap bosses (removed above floor)"
-d.post_clear.Label = "Remove former side latches and bosses"
+    helpers("Holder") + '''import FreeCADGui as Gui
+b.Label = "Holder"
+d.floor_corner_fillet.Label = "Rounded inlet floor corners"
+d.h_mount.Label = "Two M4 holes with countersinks"
 d.post_one.Label = "First support column"
 d.post_four.Label = "Four support columns"
 d.post_boss_four.Label = "Four elevated snap bosses"
+for o in b.Group:
+    o.Visibility = False
+d.h_mount.Visibility = True
 for o in d.Objects:
     if o.TypeId in ("PartDesign::Plane", "PartDesign::Line", "Sketcher::SketchObject"):
         o.Visibility = False
-d.recompute(); d.save()
+d.Body.Visibility = True
+b.Visibility = True
+d.recompute()
+Gui.activeDocument().activeView().viewAxonometric()
+Gui.activeDocument().activeView().fitAll()
+d.save()
 bb = b.Shape.BoundBox
 f"holder x {bb.XMin:.2f}..{bb.XMax:.2f} y {bb.YMin:.2f}..{bb.YMax:.2f} z {bb.ZMin:.2f}..{bb.ZMax:.2f} V {b.Shape.Volume:.1f} valid {b.Shape.isValid()}"''',
 ]
