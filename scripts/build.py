@@ -386,16 +386,22 @@ f"Four corner fillets: R {f.Radius}, V {f.Shape.Volume:.1f}"''',
     "sk('s_post_one','XY'); slot('s_post_one','post_l','post_w','pin_x','-hole_dy/2',0); "
     "pad('s_post_one','post_h','post_one')",
     # The lofted head belongs to this first column. Its shoulder bears on the plate.
-    "plane('pl_post_boss_base','XY','post_h'); sk('s_post_boss_base','pl_post_boss_base'); "
-    "slot('s_post_boss_base','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "
-    "plane('pl_post_boss_shaft','XY','post_h + fl_t - post_head_pre'); sk('s_post_boss_shaft','pl_post_boss_shaft'); "
-    "slot('s_post_boss_shaft','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "
-    "plane('pl_post_boss_head','XY','post_h + fl_t + pin_h1 - post_head_pre'); sk('s_post_boss_head','pl_post_boss_head'); "
-    "slot('s_post_boss_head','hook_l - 2*clr','pin_hd','pin_x','-hole_dy/2',0); "
-    "plane('pl_post_boss_crown','XY','post_h + fl_t + pin_h1 + pin_cyl - post_head_pre'); sk('s_post_boss_crown','pl_post_boss_crown'); "
-    "slot('s_post_boss_crown','hook_l - 2*clr','pin_hd','pin_x','-hole_dy/2',0); "
-    "plane('pl_post_boss_tip','XY','post_h + fl_t + pin_h1 + pin_cyl + pin_lead - post_head_pre'); sk('s_post_boss_tip','pl_post_boss_tip'); "
-    "slot('s_post_boss_tip','hook_l - 2*clr','pin_tip','pin_x','-hole_dy/2',0)",
+    '''import FreeCAD as App
+sections = (
+    ("base", "pin_d", "post_h"),
+    ("shaft", "pin_d", "post_h + fl_t - post_head_pre"),
+    ("head", "pin_hd", "post_h + fl_t + pin_h1 - post_head_pre"),
+    ("crown", "pin_hd", "post_h + fl_t + pin_h1 + pin_cyl - post_head_pre"),
+    ("tip", "pin_tip", "post_h + fl_t + pin_h1 + pin_cyl + pin_lead - post_head_pre"),
+)
+for tag, width, z in sections:
+    name = "s_post_boss_" + tag
+    sk(name, "XY")
+    slot(name, "hook_l - 2*clr", width, "pin_x", "-hole_dy/2", 0)
+    App.ActiveDocument.getObject(name).setExpression(".AttachmentOffset.Base.z", "params." + z.replace(" + ", " + params.").replace(" - ", " - params."))
+App.ActiveDocument.recompute()
+assert all(App.ActiveDocument.getObject("s_post_boss_" + tag).FullyConstrained for tag, _, _ in sections)
+"Five loft sketches on XY with independent Z offsets"''',
     helpers('Holder') + '''lo = d.addObject("PartDesign::AdditiveLoft", "post_boss_one")
 lo.Profile = (d.s_post_boss_base, [""])
 lo.Sections = [(d.s_post_boss_shaft, [""]), (d.s_post_boss_head, [""]),
