@@ -10,7 +10,7 @@ mounting face, X along the pump axis (inlet towards -X), Z into the pump. Native
 slot corner + MultiTransform, +Y pockets + Mirrored, one ear and one face partition + PolarPattern.
 
 Holder (body "Holder"): a TPU 95A floor with two countersunk M4 holes and four vertical
-columns. Their top shoulders support the pump plate 12 mm above the floor; elongated heads
+columns. Their top shoulders support the pump plate 4 mm above the floor; elongated heads
 snap into its hook slots. The script retains the original sock features in history, then
 removes all material above the floor with a native Pocket before adding the columns.
 """
@@ -136,7 +136,7 @@ PARAMS = [
     ('b_ch', 0.4, 'Bed chamfer height (elephant foot)'),
     ('b_cha', 40, 'Bed chamfer angle from vertical, deg'),
     ('floor_corner_r', 1.1, 'Native Fillet radius at the two inlet floor corners'),
-    ('post_h', 12, 'Air gap from the fixed floor to the pump plate; height of four support columns'),
+    ('post_h', 4, 'Air gap from the fixed floor to the pump plate; height of four support columns'),
     ('post_l', 7.2, 'Support column footprint length along the pump axis'),
     ('post_w', 6.0, 'Support column footprint width across the slot'),
     ('post_head_pre', 0.3, 'Snap-head ramp starts below the plate top to lightly preload the slot edges'),

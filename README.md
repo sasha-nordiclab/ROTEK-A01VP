@@ -30,7 +30,7 @@ The pump reference model and holder are maintained in this repository for use in
 - Origin: the centre of the four mount slots, on the mounting face of the plate (z = 0).
 - X runs along the pump axis, with the inlet towards −X (inlet tip at x = −49).
 - Z points from the mounting face into the pump. The pump axis is at `ax_h` = 21.28 mm (from the drawing, not measured yet).
-- In the experimental assembly the pump reference Body is placed 12 mm above its original datum, matching `post_h`; its reference dimensions are unchanged. The stand spans z = −5…17.60 mm.
+- In the experimental assembly the pump reference Body is placed 4 mm above its original datum, matching `post_h`; its reference dimensions are unchanged. The stand spans z = −5…9.60 mm.
 
 ### Mount plate
 
@@ -57,14 +57,14 @@ The pump reference model and holder are maintained in this repository for use in
 
 ## Holder — four-post experiment
 
-A single TPU 95A stand on the bottom of the bath. Its flat floor can be glued down; two M4 holes still allow bolted fixing. Four columns hold the pump plate 12 mm above the floor. There are no side walls, side lips or entry keys in the final shape.
+A single TPU 95A stand on the bottom of the bath. Its flat floor can be glued down; two M4 holes still allow bolted fixing. Four short columns hold the pump plate 4 mm above the floor. There are no side walls, side lips or entry keys in the final shape.
 
 - Body **Holder** is built by `scripts/build.py`; its dimensions are in the `params` sheet. The script retains the former sock operations in history, removes their material above the floor with a PartDesign Pocket, then adds the posts and elevated bosses.
 - Floor: 5 mm thick, X = −34…16.9 mm, extended towards the inlet to show the assembly orientation. The two inlet-end corners retain the native R1.1 mm Fillet.
-- Columns: four oval 7.2 × 6.0 mm posts at X ≈ ±8.92 mm, Y = ±17.5 mm, height `post_h=12` mm. Their top shoulders support the underside of the pump plate.
+- Columns: four oval 7.2 × 6.0 mm posts at X ≈ ±8.92 mm, Y = ±17.5 mm, height `post_h=4` mm. Their top shoulders support the underside of the pump plate.
 - Catches: four elongated snap bosses continue above the columns into the hook slots. Stem width 3.2 mm; head width 4.2 mm with a 40° underside and lead-in. Parameter `post_head_pre=0.3 mm` sets a small nominal preload at the plate top. The plate is meant to snap over the heads. Retention against sliding along X without the former keys needs a physical test.
 - Mounting holes: two M4 through holes on the floor centreline at X = −23.2 and +6.1 mm, with Ø4.5 mm clearance and 90° Ø9.6 mm countersinks on the pump side.
-- Holder bounds: 50.9 × 48.8 × 22.60 mm, z = −5…17.60 mm. The pump and holder are distinct valid solids; their 0.078 mm³ nominal overlap is at the four snap heads.
+- Holder bounds: 50.9 × 48.8 × 14.60 mm, z = −5…9.60 mm. The pump and holder are distinct valid solids; their 0.078 mm³ nominal overlap is at the four snap heads.
 - Material/profile: AzureFilm TPU, TPU95A Fine, 100 % zig-zag infill. Slicing and snap fit remain untested. A preliminary vibration sensitivity calculation is in [four_post_vibration.md](docs/four_post_vibration.md); actual transmission remains unmeasured.
 
 ## Folders

@@ -11,7 +11,7 @@ MASS_KG = 0.280  # user measurement with working hoses
 POST_COUNT = 4
 POST_LENGTH_MM = 7.2  # capsule overall length along X
 POST_WIDTH_MM = 6.0  # capsule width along Y
-POST_HEIGHT_MM = 12.0
+POST_HEIGHT_MM = 4.0
 DAMPING_RATIO = 0.15  # illustrative, not measured
 
 
