@@ -11,8 +11,8 @@ slot corner + MultiTransform, +Y pockets + Mirrored, one ear and one face partit
 
 Holder (body "Holder"): a TPU 95A floor with two countersunk M4 holes and four vertical
 columns. Their top shoulders support the pump plate 4 mm above the floor; elongated heads
-snap into its hook slots. The Holder tree contains only the floor Pad, bottom Chamfer, four-corner Fillet,
-mirrored columns, mirrored lofted bosses, and the final pair of countersunk holes.
+snap into its hook slots. The Holder tree contains the floor Pad, bottom Chamfer, four-corner Fillet,
+one complete post (column Pad plus snap-head AdditiveLoft), its MultiTransform, and the M4 holes.
 """
 import os
 import sys
@@ -382,12 +382,10 @@ f.ViewObject.LineColor = d.Holder.ViewObject.LineColor
 h.Visibility = False
 f.Visibility = True
 f"Four corner fillets: R {f.Radius}, V {f.Shape.Volume:.1f}"''',
-    # One oval column, native mirrors to all four slot positions.
+    # Build one complete oval column before making the four-position pattern.
     "sk('s_post_one','XY'); slot('s_post_one','post_l','post_w','pin_x','-hole_dy/2',0); "
     "pad('s_post_one','post_h','post_one')",
-    mirror_multi('Holder', 'post_four', ['post_one'], ['post_one']),
-    # Repeat the original snap-boss sections above the columns. The wider top of
-    # each column bears on the underside of the slotted pump plate.
+    # The lofted head belongs to this first column. Its shoulder bears on the plate.
     "plane('pl_post_boss_base','XY','post_h'); sk('s_post_boss_base','pl_post_boss_base'); "
     "slot('s_post_boss_base','hook_l - 2*clr','pin_d','pin_x','-hole_dy/2',0); "
     "plane('pl_post_boss_shaft','XY','post_h + fl_t - post_head_pre'); sk('s_post_boss_shaft','pl_post_boss_shaft'); "
@@ -403,11 +401,11 @@ lo.Profile = (d.s_post_boss_base, [""])
 lo.Sections = [(d.s_post_boss_shaft, [""]), (d.s_post_boss_head, [""]),
                (d.s_post_boss_crown, [""]), (d.s_post_boss_tip, [""])]
 lo.Ruled = True
-lo.Label = "Elevated snap boss"
+lo.Label = "Snap head on first column"
 b.addObject(lo)
 b.Tip = lo
-done(lo, [d.post_four])''',
-    mirror_multi('Holder', 'post_boss_four', ['post_boss_one'], ['post_boss_one']),
+done(lo, [d.post_one])''',
+    mirror_multi('Holder', 'post_complete_four', ['post_one', 'post_boss_one'], ['post_boss_one']),
     # two through M4 holes on the floor centreline; 90 deg countersinks face the pump
     '''import FreeCAD as App, FreeCADGui as Gui, Part, Sketcher
 d = App.ActiveDocument
@@ -434,7 +432,7 @@ h.Label = "M4 mounting holes and countersinks"
 h.ViewObject.ShapeColor = d.Holder.ViewObject.ShapeColor
 h.ViewObject.LineColor = d.Holder.ViewObject.LineColor
 d.recompute()
-assert h.BaseFeature == d.post_boss_four and d.Holder.Tip == h
+assert h.BaseFeature == d.post_complete_four and d.Holder.Tip == h
 assert h.Shape.isValid() and len(h.Shape.Solids) == 1
 f"M4 mount: DoF {s.DoF}, V {h.Shape.Volume:.1f}"''',
     '''import FreeCAD as App
@@ -451,8 +449,8 @@ b.Label = "Holder"
 d.floor_corner_fillet.Label = "All four floor corners R1.1"
 d.h_mount.Label = "Two M4 holes with countersinks"
 d.post_one.Label = "First support column"
-d.post_four.Label = "Four support columns"
-d.post_boss_four.Label = "Four elevated snap bosses"
+d.post_boss_one.Label = "Snap head on first column"
+d.post_complete_four.Label = "Four complete support posts"
 for o in b.Group:
     o.Visibility = False
 d.h_mount.Visibility = True
