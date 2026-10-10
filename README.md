@@ -55,6 +55,8 @@ The pump reference model and holder are maintained in this repository for use in
 - Inlet end: the short cone starts 12 mm from the inlet tip, runs 0.5 mm along the axis from Ø13.4 to Ø21.7, then continues as a cylindrical boss. The outlet tube retains its established axial position. The head length follows photo IMG_7253 (16.4 mm); the caliper reading of 14.0 disagrees and is to be measured again.
 - Along the axis, B2 + A2 + B3 is 1.0 mm shorter than the overall length B1. Until B17 and B18 are measured, the plate keeps the drawing position: 32 mm from the inlet tip.
 
+The pump reference Body uses origin XY/YZ sketch supports with parameter-driven attachment offsets. Its polar patterns and slot pattern are native FreeCAD features; the pump-axis datum line remains for the polar patterns. This support cleanup preserved the pump shape exactly.
+
 ## Holder — four-post experiment
 
 A single TPU 95A stand on the bottom of the bath. Its flat floor can be glued down; two M4 holes still allow bolted fixing. Four short columns hold the pump plate 4 mm above the floor. There are no side walls, side lips or entry keys in the final shape.

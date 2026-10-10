@@ -227,9 +227,9 @@ STEPS = [
     # plate, web, motor, end step, head
     "sk('s_plate','XY'); rect('s_plate','fl_len','fl_w','x_fs + fl_len/2',0); pad('s_plate','fl_t','plate'); "
     "sk('s_web','XY'); rect('s_web','fl_len','web_w','x_fs + fl_len/2',0); pad('s_web','fl_t + web_h','web'); "
-    "plane('pl_motor','YZ','x_tip + head_x1'); sk('s_motor','pl_motor'); circ('s_motor','p_d',0,'ax_h'); pad('s_motor','p_len - head_x1 - cap_len','motor'); "
-    "plane('pl_end','YZ','x_tip + p_len - cap_len'); sk('s_end','pl_end'); circ('s_end','cap_d',0,'ax_h'); pad('s_end','cap_len','motor_end'); "
-    "plane('pl_head','YZ','x_tip + head_x0'); sk('s_head','pl_head'); circ('s_head','head_d',0,'ax_h'); pad('s_head','head_x1 - head_x0','head')",
+    "sk('s_motor','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_motor').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x1'); App.ActiveDocument.recompute(); circ('s_motor','p_d',0,'ax_h'); pad('s_motor','p_len - head_x1 - cap_len','motor'); "
+    "sk('s_end','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_end').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.p_len - params.cap_len'); App.ActiveDocument.recompute(); circ('s_end','cap_d',0,'ax_h'); pad('s_end','cap_len','motor_end'); "
+    "sk('s_head','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_head').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); circ('s_head','head_d',0,'ax_h'); pad('s_head','head_x1 - head_x0','head')",
     # pump axis datum line
     helpers("Body") + '''ln = b.newObject("PartDesign::Line", "pump_axis")
 ln.AttachmentSupport = [(org("X_Axis"), "")]
@@ -239,9 +239,9 @@ d.recompute()
 ln.Visibility = False
 "pump_axis: base " + str(tuple(round(c, 3) for c in ln.Placement.Base)) + " dir " + str(tuple(round(c, 3) for c in ln.Placement.Rotation.multVec(App.Vector(0, 0, 1))))''',
     # one ear: lug, screw head, partition to the lug (ear B, at 90 - ear_a from +Y)
-    "sk('s_ear','pl_head'); circ('s_ear','2*ear_r','ear_lk/2*sin(ear_a)','ax_h + ear_lk/2*cos(ear_a)'); pad('s_ear','head_x1 - head_x0','ear_lug'); "
-    "sk('s_screw','pl_head'); circ('s_screw','scr_d','ear_lk/2*sin(ear_a)','ax_h + ear_lk/2*cos(ear_a)'); pad('s_screw','scr_h','ear_screw',reverse=True); "
-    "sk('s_ear_rib','pl_head'); " + ring_poly('s_ear_rib', '(90 - ear_a)', 'cov_d/2 - 0.5', 'ear_lk/2') + "; pad('s_ear_rib','rib_h','ear_rib',reverse=True)",
+    "sk('s_ear','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_ear').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); circ('s_ear','2*ear_r','ear_lk/2*sin(ear_a)','ax_h + ear_lk/2*cos(ear_a)'); pad('s_ear','head_x1 - head_x0','ear_lug'); "
+    "sk('s_screw','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_screw').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); circ('s_screw','scr_d','ear_lk/2*sin(ear_a)','ax_h + ear_lk/2*cos(ear_a)'); pad('s_screw','scr_h','ear_screw',reverse=True); "
+    "sk('s_ear_rib','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_ear_rib').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); " + ring_poly('s_ear_rib', '(90 - ear_a)', 'cov_d/2 - 0.5', 'ear_lk/2') + "; pad('s_ear_rib','rib_h','ear_rib',reverse=True)",
     # four ears by polar pattern around the pump axis
     helpers("Body") + '''pp = d.addObject("PartDesign::PolarPattern", "ears")
 pp.Originals = [d.ear_lug, d.ear_screw, d.ear_rib]
@@ -251,8 +251,8 @@ pp.Angle = 360
 pp.Occurrences = 4
 done(pp, [d.ear_rib, d.ear_screw, d.ear_lug])''',
     # raised cover and one face partition
-    "plane('pl_cover','YZ','x_tip + head_x0 - cov_t'); sk('s_cover','pl_cover'); circ('s_cover','cov_d',0,'ax_h'); pad('s_cover','cov_t','cover'); "
-    "sk('s_face_rib','pl_head'); " + ring_poly('s_face_rib', 'rib_a', 'cov_d/2 - 0.5', 'head_d/2') + "; pad('s_face_rib','rib_h','face_rib',reverse=True)",
+    "sk('s_cover','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_cover').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0 - params.cov_t'); App.ActiveDocument.recompute(); circ('s_cover','cov_d',0,'ax_h'); pad('s_cover','cov_t','cover'); "
+    "sk('s_face_rib','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_face_rib').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); " + ring_poly('s_face_rib', 'rib_a', 'cov_d/2 - 0.5', 'head_d/2') + "; pad('s_face_rib','rib_h','face_rib',reverse=True)",
     # four face partitions, the one under the outlet (rib_a + 90) suppressed
     helpers("Body") + '''import math
 pp = d.addObject("PartDesign::PolarPattern", "face_ribs")
@@ -273,17 +273,17 @@ d.recompute()
 after = [has(ra + k * 90) for k in range(4)]
 f"{done(pp, [d.face_rib])} present at rib_a+k*90 before {before} after {after}"''',
     # cylindrical boss starts after the short cone; the neck's internal core connects it
-    "plane('pl_boss','YZ','x_tip + in_len + neck_len + cone_len'); sk('s_boss','pl_boss'); circ('s_boss','boss_d',0,'ax_h'); pad('s_boss','head_x0 - cov_t - in_len - neck_len - cone_len','boss'); "
-    "plane('pl_neck','YZ','x_tip + in_len'); sk('s_neck','pl_neck'); circ('s_neck','neck_d',0,'ax_h'); pad('s_neck','neck_len + cone_len','neck'); "
-    "plane('pl_inlet','YZ','x_tip'); sk('s_inlet','pl_inlet'); circ('s_inlet','in_d',0,'ax_h'); pad('s_inlet','in_len','inlet')",
+    "sk('s_boss','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_boss').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.in_len + params.neck_len + params.cone_len'); App.ActiveDocument.recompute(); circ('s_boss','boss_d',0,'ax_h'); pad('s_boss','head_x0 - cov_t - in_len - neck_len - cone_len','boss'); "
+    "sk('s_neck','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_neck').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.in_len'); App.ActiveDocument.recompute(); circ('s_neck','neck_d',0,'ax_h'); pad('s_neck','neck_len + cone_len','neck'); "
+    "sk('s_inlet','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_inlet').setExpression('.AttachmentOffset.Base.z','params.x_tip'); App.ActiveDocument.recompute(); circ('s_inlet','in_d',0,'ax_h'); pad('s_inlet','in_len','inlet')",
     # outlet and grommet
-    "plane('pl_axis','XY','ax_h'); sk('s_outlet_tube','pl_axis'); circ('s_outlet_tube','out_d2','x_tip + out_x','out_y'); pad('s_outlet_tube','out_reach - out_len - ax_h','outlet_tube'); "
-    "plane('pl_barb','XY','out_reach - out_len'); sk('s_outlet_barb','pl_barb'); circ('s_outlet_barb','out_d','x_tip + out_x','out_y'); pad('s_outlet_barb','out_len','outlet_barb'); "
-    "plane('pl_motor_face','YZ','x_tip + p_len'); sk('s_grommet','pl_motor_face'); slot('s_grommet','grm_l','grm_w','grm_y','ax_h + grm_z',90); pad('s_grommet','grm_t','grommet')",
+    "sk('s_outlet_tube','XY'); import FreeCAD as App; App.ActiveDocument.getObject('s_outlet_tube').setExpression('.AttachmentOffset.Base.z','params.ax_h'); App.ActiveDocument.recompute(); circ('s_outlet_tube','out_d2','x_tip + out_x','out_y'); pad('s_outlet_tube','out_reach - out_len - ax_h','outlet_tube'); "
+    "sk('s_outlet_barb','XY'); import FreeCAD as App; App.ActiveDocument.getObject('s_outlet_barb').setExpression('.AttachmentOffset.Base.z','params.out_reach - params.out_len'); App.ActiveDocument.recompute(); circ('s_outlet_barb','out_d','x_tip + out_x','out_y'); pad('s_outlet_barb','out_len','outlet_barb'); "
+    "sk('s_grommet','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_grommet').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.p_len'); App.ActiveDocument.recompute(); slot('s_grommet','grm_l','grm_w','grm_y','ax_h + grm_z',90); pad('s_grommet','grm_t','grommet')",
     # one slot corner (+X, +Y): entry open to the edge and hook towards the middle
-    "plane('pl_plate_back','XY','fl_t'); "
-    "sk('s_slot_entry','pl_plate_back'); slot('s_slot_entry','fl_w/2 + slot_ov - hole_dy/2 + hole_d','hole_d','hole_dx/2','(hole_dy/2 + fl_w/2 + slot_ov)/2',90); pocket('s_slot_entry','through','slot_entry'); "
-    "sk('s_slot_hook','pl_plate_back'); slot('s_slot_hook','hook_l','hook_w','hole_dx/2 - (hook_l - hole_d)/2','hole_dy/2'); pocket('s_slot_hook','through','slot_hook')",
+    ""
+    "sk('s_slot_entry','XY'); import FreeCAD as App; App.ActiveDocument.getObject('s_slot_entry').setExpression('.AttachmentOffset.Base.z','params.fl_t'); App.ActiveDocument.recompute(); slot('s_slot_entry','fl_w/2 + slot_ov - hole_dy/2 + hole_d','hole_d','hole_dx/2','(hole_dy/2 + fl_w/2 + slot_ov)/2',90); pocket('s_slot_entry','through','slot_entry'); "
+    "sk('s_slot_hook','XY'); import FreeCAD as App; App.ActiveDocument.getObject('s_slot_hook').setExpression('.AttachmentOffset.Base.z','params.fl_t'); App.ActiveDocument.recompute(); slot('s_slot_hook','hook_l','hook_w','hole_dx/2 - (hook_l - hole_d)/2','hole_dy/2'); pocket('s_slot_hook','through','slot_hook')",
     # four slots by mirroring the corner across YZ and XZ
     helpers("Body") + '''mt = d.addObject("PartDesign::MultiTransform", "slots")
 mt.Originals = [d.slot_entry, d.slot_hook]
@@ -310,7 +310,7 @@ b.addObject(mi)
 mi.MirrorPlane = (org("XZ_Plane"), [""])
 done(mi, [d.pockets_side])''',
     # 0.5 mm axial cone on the inlet face, added around the neck's internal core
-    "plane('pl_boss_cone','YZ','x_tip + cone_start'); sk('s_boss_cone','pl_boss_cone'); circ('s_boss_cone','neck_d',0,'ax_h'); "
+    "sk('s_boss_cone','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_boss_cone').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.cone_start'); App.ActiveDocument.recompute(); circ('s_boss_cone','neck_d',0,'ax_h'); "
     + helpers('Body') + '''f = b.newObject("PartDesign::Pad", "boss_cone")
 f.Profile = d.s_boss_cone
 f.setExpression("Length", "params.cone_len")
