@@ -184,6 +184,62 @@ def ring_poly(sk, t, r1, r2, w='rib_t'):
     return f'poly({sk!r}, {pts!r})'
 
 
+def ring_rect(sk, t, r1, r2, length_expr, angle_expr):
+    """Create a radial rib, then replace vertex dimensions by rectangle relationships."""
+    return ring_poly(sk, t, r1, r2) + f'''
+import FreeCAD as App, Sketcher, math
+s = App.ActiveDocument.getObject({sk!r})
+assert len(s.Constraints) == 12 and all(s.Constraints[i].Type in ("DistanceX", "DistanceY") for i in range(4, 12))
+g0, g1 = s.Geometry[0], s.Geometry[1]
+length, width = g0.length(), g1.length()
+angle = math.atan2(g0.EndPoint.y - g0.StartPoint.y, g0.EndPoint.x - g0.StartPoint.x)
+for i in range(11, 5, -1):
+    s.delConstraint(i)
+for kind, a, b in (("Parallel", 0, 2), ("Parallel", 1, 3), ("Perpendicular", 0, 1)):
+    s.addConstraint(Sketcher.Constraint(kind, a, b))
+for name, constraint, expr in (
+    ("rib_length", Sketcher.Constraint("Distance", 0, length), {length_expr!r}),
+    ("rib_width", Sketcher.Constraint("Distance", 1, width), "params.rib_t"),
+    ("rib_angle", Sketcher.Constraint("Angle", 0, angle), {angle_expr!r}),
+):
+    index = s.addConstraint(constraint)
+    s.renameConstraint(index, name)
+    s.setExpression("Constraints." + name, expr)
+App.ActiveDocument.recompute()
+assert s.FullyConstrained and not s.ConflictingConstraints and not s.RedundantConstraints
+'''
+
+
+def pocket_constraints(name, side=False):
+    """Replace repeated pocket coordinates with equal sizes and geometric alignment."""
+    return f'''import FreeCAD as App, Sketcher
+s = App.ActiveDocument.getObject({name!r})
+remove = {{"r2_h", "r3_h", "r4_h", "r2_w", "r3_w"}}
+if {side!r}:
+    remove.update(("r2_y", "r3_y", "r4_y"))
+    remove.update("p{{}}_{{}}_{{}}".format(k, j, axis)
+                  for k in (1, 2)
+                  for j, axis in ((1, "x"), (2, "y"), (3, "x"), (4, "y"), (5, "x"), (5, "y")))
+    remove.update(("p2_0_y", "p2_1_y", "p2_3_y"))
+indices = [i for i, c in enumerate(s.Constraints) if c.Name in remove]
+assert len(indices) == len(remove), (indices, remove)
+for i in sorted(indices, reverse=True):
+    s.delConstraint(i)
+for a, b in ((1, 6), (1, 11), (1, 16), (0, 5), (0, 10)):
+    s.addConstraint(Sketcher.Constraint("Equal", a, b))
+if {side!r}:
+    for a, b in ((4, 9), (4, 14), (4, 19)):
+        s.addConstraint(Sketcher.Constraint("Horizontal", a, 1, b, 1))
+    for first in (20, 26):
+        for j in range(6):
+            s.addConstraint(Sketcher.Constraint("Vertical" if j % 2 == 0 else "Horizontal", first + j))
+    for a, b in ((20, 26), (21, 27), (23, 29)):
+        s.addConstraint(Sketcher.Constraint("Horizontal", a, 1, b, 1))
+App.ActiveDocument.recompute()
+assert s.FullyConstrained and not s.ConflictingConstraints and not s.RedundantConstraints
+'''
+
+
 
 ROWS = [('pk_ra0', 'pk_ra1'), ('pk_rb0', 'pk_rb1'), ('pk_rc0', 'pk_rc1'), ('pk_rd0', 'pk_rd1')]
 
@@ -241,7 +297,10 @@ ln.Visibility = False
     # one ear: lug, screw head, partition to the lug (ear B, at 90 - ear_a from +Y)
     "sk('s_ear','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_ear').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); circ('s_ear','2*ear_r','ear_lk/2*sin(ear_a)','ax_h + ear_lk/2*cos(ear_a)'); pad('s_ear','head_x1 - head_x0','ear_lug'); "
     "sk('s_screw','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_screw').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); circ('s_screw','scr_d','ear_lk/2*sin(ear_a)','ax_h + ear_lk/2*cos(ear_a)'); pad('s_screw','scr_h','ear_screw',reverse=True); "
-    "sk('s_ear_rib','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_ear_rib').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); " + ring_poly('s_ear_rib', '(90 - ear_a)', 'cov_d/2 - 0.5', 'ear_lk/2') + "; pad('s_ear_rib','rib_h','ear_rib',reverse=True)",
+    "sk('s_ear_rib','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_ear_rib').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); "
+    + ring_rect('s_ear_rib', '(90 - ear_a)', 'cov_d/2 - 0.5', 'ear_lk/2',
+                'params.ear_lk/2 - (params.cov_d/2 - 0.5)', '(90 - params.ear_a) * 1deg')
+    + "\npad('s_ear_rib','rib_h','ear_rib',reverse=True)",
     # four ears by polar pattern around the pump axis
     helpers("Body") + '''pp = d.addObject("PartDesign::PolarPattern", "ears")
 pp.Originals = [d.ear_lug, d.ear_screw, d.ear_rib]
@@ -252,7 +311,10 @@ pp.Occurrences = 4
 done(pp, [d.ear_rib, d.ear_screw, d.ear_lug])''',
     # raised cover and one face partition
     "sk('s_cover','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_cover').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0 - params.cov_t'); App.ActiveDocument.recompute(); circ('s_cover','cov_d',0,'ax_h'); pad('s_cover','cov_t','cover'); "
-    "sk('s_face_rib','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_face_rib').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); " + ring_poly('s_face_rib', 'rib_a', 'cov_d/2 - 0.5', 'head_d/2') + "; pad('s_face_rib','rib_h','face_rib',reverse=True)",
+    "sk('s_face_rib','YZ'); import FreeCAD as App; App.ActiveDocument.getObject('s_face_rib').setExpression('.AttachmentOffset.Base.z','params.x_tip + params.head_x0'); App.ActiveDocument.recompute(); "
+    + ring_rect('s_face_rib', 'rib_a', 'cov_d/2 - 0.5', 'head_d/2',
+                'params.head_d/2 - (params.cov_d/2 - 0.5)', 'params.rib_a * 1deg')
+    + "\npad('s_face_rib','rib_h','face_rib',reverse=True)",
     # four face partitions, the one under the outlet (rib_a + 90) suppressed
     helpers("Body") + '''import math
 pp = d.addObject("PartDesign::PolarPattern", "face_ribs")
@@ -296,13 +358,15 @@ done(mt, [d.slot_hook, d.slot_entry])''',
     # centre pockets (symmetric about Y 0), pk_dc deep
     "sk('s_pockets_mid','XY'); "
     + '; '.join(f"rect('s_pockets_mid','{b1} - {a}','pk_c3w','({a} + {b1})/2',0)" for a, b1 in ROWS)
-    + "; pocket('s_pockets_mid','pk_dc','pockets_mid',reverse=True)",
+    + '\n' + pocket_constraints('s_pockets_mid')
+    + "\npocket('s_pockets_mid','pk_dc','pockets_mid',reverse=True)",
     # side and outer pockets on +Y, pk_d deep (outer ones are L-shaped around the slot hooks)
     "sk('s_pockets_side','XY'); "
     + '; '.join(f"rect('s_pockets_side','{b1} - {a}','pk_c2w','({a} + {b1})/2','(pk_c2a + pk_c2b)/2')" for a, b1 in ROWS) + '; '
     + "poly('s_pockets_side',[('pk_rb1','pk_c1a'),('pk_rb1','pk_c1b'),('-pk_hx','pk_c1b'),('-pk_hx','pk_hy'),('pk_rb0','pk_hy'),('pk_rb0','pk_c1a')]); "
     + "poly('s_pockets_side',[('pk_rc0','pk_c1a'),('pk_rc0','pk_c1b'),('pk_hx','pk_c1b'),('pk_hx','pk_hy'),('pk_rc1','pk_hy'),('pk_rc1','pk_c1a')]); "
-    + "pocket('s_pockets_side','pk_d','pockets_side',reverse=True)",
+    + '\n' + pocket_constraints('s_pockets_side', side=True)
+    + "\npocket('s_pockets_side','pk_d','pockets_side',reverse=True)",
     # mirror the side pockets to -Y
     helpers("Body") + '''mi = d.addObject("PartDesign::Mirrored", "pockets_side_mirror")
 mi.Originals = [d.pockets_side]
