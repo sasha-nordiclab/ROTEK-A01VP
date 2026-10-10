@@ -11,7 +11,7 @@ slot corner + MultiTransform, +Y pockets + Mirrored, one ear and one face partit
 
 Holder (body "Holder"): a TPU 95A floor with two countersunk M4 holes and four vertical
 columns. Their top shoulders support the pump plate 4 mm above the floor; elongated heads
-snap into its hook slots. The Holder tree contains only the floor Pad, bottom Chamfer, inlet corner Fillet,
+snap into its hook slots. The Holder tree contains only the floor Pad, bottom Chamfer, four-corner Fillet,
 mirrored columns, mirrored lofted bosses, and the final pair of countersunk holes.
 """
 import os
@@ -135,7 +135,7 @@ PARAMS = [
     ('pin_tip', 1.9, 'Snap boss tip width across the hook slot'),
     ('b_ch', 0.4, 'Bed chamfer height (elephant foot)'),
     ('b_cha', 40, 'Bed chamfer angle from vertical, deg'),
-    ('floor_corner_r', 1.1, 'Native Fillet radius at the two inlet floor corners'),
+    ('floor_corner_r', 1.1, 'Native Fillet radius at all four floor corners'),
     ('post_h', 4, 'Air gap from the fixed floor to the pump plate; height of four support columns'),
     ('post_l', 7.2, 'Support column footprint length along the pump axis'),
     ('post_w', 6.0, 'Support column footprint width across the slot'),
@@ -353,26 +353,27 @@ assert f.Shape.isValid() and len(f.Shape.Solids) == 1
 h.Visibility = False
 f.Visibility = True
 f"Bed chamfer: V {f.Shape.Volume:.1f}"''',
-    # standard PartDesign Fillet on the two vertical edges at the inlet floor end
+    # standard PartDesign Fillet on all four vertical floor corner edges
     '''import FreeCAD as App
 d = App.ActiveDocument
 p = d.params
 h = d.bed_chamfer
-x = float(p.get("floor_x0"))
-y = float(p.get("wy2"))
+y0 = float(p.get("wy2"))
+x0 = float(p.get("floor_x0"))
+x1 = float(p.get("hx1"))
 z = float(p.get("z_bb")) + float(p.get("b_ch"))
 edges = []
 for i, edge in enumerate(h.Shape.Edges, 1):
     bb = edge.BoundBox
-    if (abs(bb.XMin - x) < 1e-5 and abs(bb.XMax - x) < 1e-5
-            and abs(abs(bb.YMin) - y) < 1e-5 and abs(bb.YMax - bb.YMin) < 1e-5
+    if (any(abs(bb.XMin - x) < 1e-5 and abs(bb.XMax - x) < 1e-5 for x in (x0, x1))
+            and abs(abs(bb.YMin) - y0) < 1e-5 and abs(bb.YMax - bb.YMin) < 1e-5
             and abs(bb.ZMin - z) < 1e-5 and abs(bb.ZMax) < 1e-5):
         edges.append("Edge" + str(i))
-assert len(edges) == 2, edges
+assert len(edges) == 4, edges
 f = d.Holder.newObject("PartDesign::Fillet", "floor_corner_fillet")
 f.Base = (h, edges)
 f.setExpression("Radius", "params.floor_corner_r")
-f.Label = "Rounded inlet floor corners"
+f.Label = "All four floor corners R1.1"
 d.Holder.Tip = f
 d.recompute()
 assert f.Shape.isValid() and len(f.Shape.Solids) == 1
@@ -380,7 +381,7 @@ f.ViewObject.ShapeColor = d.Holder.ViewObject.ShapeColor
 f.ViewObject.LineColor = d.Holder.ViewObject.LineColor
 h.Visibility = False
 f.Visibility = True
-f"Inlet Fillet: R {f.Radius}, V {f.Shape.Volume:.1f}"''',
+f"Four corner fillets: R {f.Radius}, V {f.Shape.Volume:.1f}"''',
     # One oval column, native mirrors to all four slot positions.
     "sk('s_post_one','XY'); slot('s_post_one','post_l','post_w','pin_x','-hole_dy/2',0); "
     "pad('s_post_one','post_h','post_one')",
@@ -447,7 +448,7 @@ assert d.Body.Shape.isValid() and d.Holder.Shape.isValid()
     # holder finish
     helpers("Holder") + '''import FreeCADGui as Gui
 b.Label = "Holder"
-d.floor_corner_fillet.Label = "Rounded inlet floor corners"
+d.floor_corner_fillet.Label = "All four floor corners R1.1"
 d.h_mount.Label = "Two M4 holes with countersinks"
 d.post_one.Label = "First support column"
 d.post_four.Label = "Four support columns"
