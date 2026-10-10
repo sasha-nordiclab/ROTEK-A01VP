@@ -12,6 +12,8 @@ The pump reference model and holder are maintained in this repository for use in
 
 ## Pump
 
+<p align="center"><img src="docs/img/pump_1.png" width="420" alt="Pump reference model, motor side"> <img src="docs/img/pump_2.png" width="420" alt="Pump reference model, inlet side"></p>
+
 | | |
 |---|---|
 | Product | ROTEK Food Grade Mini Centrifugal Pump with Brushless DC Motor |
