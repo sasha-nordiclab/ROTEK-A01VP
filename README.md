@@ -8,6 +8,8 @@ The pump reference model and holder are maintained in this repository for use in
 [JOBO Repair Parts](https://github.com/sasha-nordiclab/jobo-repair-parts) and
 [THD CP-Lift Parts](https://github.com/sasha-nordiclab/thd-cp-lift-parts).
 
+<p align="center"><img src="docs/img/assembly_1.png" width="420" alt="Pump on the four-post TPU holder, inlet side"> <img src="docs/img/assembly_2.png" width="420" alt="Pump on the four-post TPU holder, motor side"></p>
+
 ## Pump
 
 | | |
@@ -58,6 +60,8 @@ The pump reference model and holder are maintained in this repository for use in
 The pump reference Body uses origin XY/YZ sketch supports with parameter-driven attachment offsets. Its polar patterns and slot pattern are native FreeCAD features; the pump-axis datum line remains for the polar patterns. The pocket layouts use equality, alignment and horizontal/vertical constraints; radial ribs use named length, width and angle dimensions. These parameterisation changes preserved the pump shape exactly.
 
 ## Holder — four-post experiment
+
+<p align="center"><img src="docs/img/holder_1.png" width="420" alt="Four-post TPU holder"> <img src="docs/img/holder_2.png" width="420" alt="Four-post TPU holder, other side"></p>
 
 A single TPU 95A stand on the bottom of the bath. Its flat floor can be glued down; two M4 holes still allow bolted fixing. Four short columns hold the pump plate 4 mm above the floor. There are no side walls, side lips or entry keys in the final shape.
 
