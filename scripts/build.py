@@ -11,7 +11,7 @@ slot corner + MultiTransform, +Y pockets + Mirrored, one ear and one face partit
 
 Holder (body "Holder"): a TPU 95A floor with two countersunk M4 holes and four vertical
 columns. Their top shoulders support the pump plate 4 mm above the floor; elongated heads
-snap into its hook slots. The Holder tree contains only the floor, inlet corner Fillet,
+snap into its hook slots. The Holder tree contains only the floor Pad, bottom Chamfer, inlet corner Fillet,
 mirrored columns, mirrored lofted bosses, and the final pair of countersunk holes.
 """
 import os
@@ -332,16 +332,32 @@ Gui.getDocument(d.Name).ActiveView.setActiveObject("pdbody", b)
 d.recompute()
 "Holder: OK"''',
     # floor reaches the pump head face at floor_x0
-    # the first b_ch is padded with a taper (positive grows outwards) for the bed chamfer
     "plane('hl_bed','XY','z_bb'); sk('s_h_foot','hl_bed'); "
-    "rect('s_h_foot','hx1 - floor_x0 - 2*b_ch*tan(b_cha)','2*wy2 - 2*b_ch*tan(b_cha)','(floor_x0 + hx1)/2',0); pad('s_h_foot','b_ch','h_foot'); "
-    "import FreeCAD; FreeCAD.ActiveDocument.getObject('h_foot').setExpression('TaperAngle', 'params.b_cha'); FreeCAD.ActiveDocument.recompute(); "
-    "plane('hl_floor','XY','z_bb + b_ch'); sk('s_h_floor','hl_floor'); rect('s_h_floor','hx1 - floor_x0','2*wy2','(floor_x0 + hx1)/2',0); pad('s_h_floor','f_t - b_ch','h_floor')",
+    "rect('s_h_foot','hx1 - floor_x0','2*wy2','(floor_x0 + hx1)/2',0); pad('s_h_foot','f_t','h_foot')",
+    # Native chamfer along all four edges of the glued face.
+    '''import FreeCAD as App
+d = App.ActiveDocument
+h = d.h_foot
+z = float(d.params.get("z_bb"))
+edges = ["Edge" + str(i) for i, e in enumerate(h.Shape.Edges, 1)
+         if abs(e.BoundBox.ZMin - z) < 1e-5 and abs(e.BoundBox.ZMax - z) < 1e-5]
+assert len(edges) == 4, edges
+f = d.Holder.newObject("PartDesign::Chamfer", "bed_chamfer")
+f.Base = (h, edges)
+f.ChamferType = "Two distances"
+f.setExpression("Size", "params.b_ch")
+f.setExpression("Size2", "params.b_ch * tan(params.b_cha)")
+f.Label = "Chamfer on glued face"
+d.recompute()
+assert f.Shape.isValid() and len(f.Shape.Solids) == 1
+h.Visibility = False
+f.Visibility = True
+f"Bed chamfer: V {f.Shape.Volume:.1f}"''',
     # standard PartDesign Fillet on the two vertical edges at the inlet floor end
     '''import FreeCAD as App
 d = App.ActiveDocument
 p = d.params
-h = d.h_floor
+h = d.bed_chamfer
 x = float(p.get("floor_x0"))
 y = float(p.get("wy2"))
 z = float(p.get("z_bb")) + float(p.get("b_ch"))

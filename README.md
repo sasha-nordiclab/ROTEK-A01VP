@@ -59,7 +59,7 @@ The pump reference model and holder are maintained in this repository for use in
 
 A single TPU 95A stand on the bottom of the bath. Its flat floor can be glued down; two M4 holes still allow bolted fixing. Four short columns hold the pump plate 4 mm above the floor. There are no side walls, side lips or entry keys in the final shape.
 
-- Body **Holder** is built by `scripts/build.py`; its dimensions are in the `params` sheet. Its native feature chain is floor, inlet corner Fillet, one post mirrored to four, one additive loft snap boss mirrored to four, and a final Hole feature for both M4 countersinks. The obsolete sock features have been removed from the document and build script.
+- Body **Holder** is built by `scripts/build.py`; its dimensions are in the `params` sheet. Its native feature chain is floor Pad, bottom Chamfer, inlet corner Fillet, one post mirrored to four, one additive loft snap boss mirrored to four, and a final Hole feature for both M4 countersinks. The obsolete sock features have been removed from the document and build script.
 - Floor: 5 mm thick, X = −34…16.9 mm, extended towards the inlet to show the assembly orientation. The two inlet-end corners retain the native R1.1 mm Fillet.
 - Columns: four oval 7.2 × 6.0 mm posts at X ≈ ±8.92 mm, Y = ±17.5 mm, height `post_h=4` mm. Their top shoulders support the underside of the pump plate.
 - Catches: four elongated snap bosses continue above the columns into the hook slots. Stem width 3.2 mm; head width 4.2 mm with a 40° underside and lead-in. Parameter `post_head_pre=0.3 mm` sets a small nominal preload at the plate top. The plate is meant to snap over the heads. Retention against sliding along X without the former keys needs a physical test.
